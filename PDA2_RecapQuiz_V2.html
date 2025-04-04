@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDA2 Recap Quiz</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        #quiz-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 650px; /* Slightly wider for longer options */
+            text-align: center;
+        }
+        h1 {
+            color: #5a5a5a;
+            margin-bottom: 25px;
+        }
+        #question-container {
+            margin-bottom: 20px;
+            min-height: 80px; /* Ensure space even if question is short */
+            text-align: left; /* Align question text left */
+        }
+        #question-text {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #444;
+        }
+        #options-container button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px; /* Added padding left for label */
+            margin: 8px 0;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            box-sizing: border-box; /* Include padding in width */
+            text-align: left; /* Align option text left */
+        }
+        #options-container button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        #options-container button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        #feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 25px; /* Reserve space for feedback */
+            text-align: center; /* Center feedback */
+        }
+        .correct {
+            color: green;
+        }
+        .incorrect {
+            color: red;
+        }
+        #next-btn, #retake-btn {
+            padding: 10px 25px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        #next-btn:hover, #retake-btn:hover {
+            background-color: #218838;
+        }
+        #score-container {
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: center; /* Center score */
+        }
+        /* Hide elements initially */
+        #next-btn, #score-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="quiz-container">
+        <h1>PDA2 Recap Quiz</h1>
+
+        <div id="question-container">
+            <p id="question-text">Question text will load here.</p>
+            <div id="options-container">
+                <!-- Option buttons will be loaded here -->
+            </div>
+            <div id="feedback"></div>
+        </div>
+
+        <button id="next-btn">Next Question</button>
+
+        <div id="score-container">
+            <p id="score-text">Your final score will appear here.</p>
+            <button id="retake-btn">Retake Quiz?</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+             {
+                question: "In Python, what type of brackets are used to define a list?",
+                options: ["() Parentheses", "{} Curly Braces", "[] Square Brackets", "<> Angle Brackets", "|| Pipe Symbols"],
+                answer: "[] Square Brackets" // Correct answer text must match exactly one option
+            },
+            {
+                question: "If `my_list = [10, 20, 30, 40, 50]`, what does `my_list[-1]` return?",
+                options: ["10", "50", "An error", "40", "None"],
+                answer: "50"
+            },
+            {
+                question: "Which basic Python data type is typically used for ordered, immutable sequences?",
+                options: ["List", "Dictionary", "Tuple", "Set", "String"], // Added String as plausible distractor
+                answer: "Tuple" // Tuple is the most specific answer for immutable ordered sequence
+            },
+            {
+                question: "What does the string method `.lower()` do in Python?",
+                options: ["Converts the string to uppercase", "Checks if the string is in lowercase", "Returns the length of the string", "Converts all characters in the string to lowercase", "Removes leading/trailing whitespace"],
+                answer: "Converts all characters in the string to lowercase"
+            },
+            {
+                question: "Which operator is used in Python to check if two values are equal?",
+                options: ["=", "==", "!=", "===", "equals"],
+                answer: "=="
+            },
+            {
+                question: "What character denotes the start of an indented code block after statements like `if`, `for`, or `while` in Python?",
+                options: ["; Semicolon", ": Colon", "{} Curly Braces", "-> Arrow", "// Double Slash"],
+                answer: ": Colon"
+            },
+            {
+                question: "Which Python loop type is generally used when you want to repeat a block of code as long as a certain condition remains true?",
+                options: ["for loop", "if statement", "while loop", "try block", "do-while loop"], // Python doesn't have do-while
+                answer: "while loop"
+            },
+            {
+                question: "Which library is most commonly associated with creating and manipulating DataFrames in Python for data analysis?",
+                options: ["NumPy", "Matplotlib", "SciPy", "Pandas", "Requests"],
+                answer: "Pandas"
+            },
+            {
+                question: "To read data specifically from an Excel file (`.xlsx`) into a Pandas DataFrame, which function is typically used?",
+                options: ["pd.read_csv()", "pd.read_excel()", "pd.load_excel()", "pd.open_xlsx()", "pd.excel_to_dataframe()"],
+                answer: "pd.read_excel()" // More specific than read_csv for Excel
+            },
+            {
+                question: "According to the slides (and Python best practices), what is visually crucial for defining the structure and scope of code blocks (e.g., inside loops or conditionals)?",
+                options: ["Using semicolons at the end of lines", "Using curly braces {}", "Consistent indentation (spaces or tabs)", "Capitalizing all keywords", "Writing comments for every line"],
+                answer: "Consistent indentation (spaces or tabs)"
+            }
+        ];
+
+        const questionContainer = document.getElementById('question-container');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedback = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const scoreContainer = document.getElementById('score-container');
+        const scoreText = document.getElementById('score-text');
+        const retakeBtn = document.getElementById('retake-btn');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            // Clear previous state
+            feedback.textContent = '';
+            feedback.className = ''; // Reset color class
+            optionsContainer.innerHTML = ''; // Clear old options
+            nextBtn.style.display = 'none'; // Hide next button until answer selected
+
+            // Load current question data
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionText.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+
+            // Create and append option buttons with labels
+            const optionLabels = ['A', 'B', 'C', 'D', 'E'];
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                // Store the raw option text in a data attribute for comparison
+                button.dataset.optionValue = option;
+                button.textContent = `${optionLabels[index]}. ${option}`; // Add label A., B., etc.
+                button.onclick = () => selectAnswer(button.dataset.optionValue, currentQuestion.answer, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selectedOptionValue, correctAnswer, button) {
+            // Disable all buttons after selection
+            const buttons = optionsContainer.getElementsByTagName('button');
+            for (let btn of buttons) {
+                btn.disabled = true;
+                 // Optionally visually distinguish the selected button more
+                if (btn === button) {
+                   btn.style.border = '2px solid #333';
+                } else {
+                   btn.style.opacity = '0.6'; // Dim unselected buttons
+                }
+            }
+
+            // Check answer and provide feedback
+            if (selectedOptionValue === correctAnswer) {
+                score++;
+                feedback.textContent = 'Correct!';
+                feedback.className = 'correct';
+                button.style.backgroundColor = '#28a745'; // Green for correct
+            } else {
+                // Find the correct option text to display
+                let correctAnswerText = correctAnswer;
+                for (let btn of buttons) {
+                    if (btn.dataset.optionValue === correctAnswer) {
+                       correctAnswerText = btn.textContent; // Get the full text including label
+                       break;
+                    }
+                }
+                feedback.textContent = `Incorrect. The correct answer is: ${correctAnswerText}`;
+                feedback.className = 'incorrect';
+                button.style.backgroundColor = '#dc3545'; // Red for incorrect selected
+
+                // Highlight the correct answer button if a wrong one was chosen
+                for (let btn of buttons) {
+                   // Compare using the stored data attribute value
+                    if (btn.dataset.optionValue === correctAnswer) {
+                        btn.style.backgroundColor = '#28a745'; // Highlight correct one
+                        btn.style.opacity = '1.0';
+                        btn.style.border = '2px solid darkgreen';
+                    }
+                }
+            }
+
+            // Show the next button
+            nextBtn.style.display = 'block';
+        }
+
+        function showScore() {
+            questionContainer.style.display = 'none'; // Hide question area
+            nextBtn.style.display = 'none'; // Hide next button
+            scoreContainer.style.display = 'block'; // Show score area
+            scoreText.textContent = `Quiz Complete! You scored ${score} out of ${quizData.length}.`;
+        }
+
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showScore();
+            }
+        });
+
+        retakeBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreContainer.style.display = 'none'; // Hide score area
+            questionContainer.style.display = 'block'; // Show question area
+            loadQuestion(); // Start from the first question
+        });
+
+        // Initial load
+        loadQuestion();
+
+    </script>
+</body>
+</html>

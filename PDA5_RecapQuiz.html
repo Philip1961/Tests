@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDA5 Recap Quiz</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .quiz-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #question-container {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        #question-text {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #555;
+        }
+        #options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            color: #333;
+            font-size: 1em;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            background-color: #e9e9e9;
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .option-btn.correct {
+            background-color: #d4edda; /* Light green */
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .option-btn.incorrect {
+            background-color: #f8d7da; /* Light red */
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        #feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            height: 20px; /* Reserve space */
+        }
+        #feedback.correct {
+            color: #155724; /* Dark green */
+        }
+        #feedback.incorrect {
+            color: #721c24; /* Dark red */
+        }
+        #navigation {
+             margin-top: 20px;
+        }
+        .nav-btn {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .nav-btn:hover {
+            background-color: #0056b3;
+        }
+        #score-container {
+            margin-top: 30px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>PDA5 Recap Quiz</h1>
+
+        <div id="question-area">
+            <div id="question-container">
+                <div id="question-text">Question text will load here...</div>
+            </div>
+            <div id="options-container">
+                <!-- Option buttons will be loaded here -->
+            </div>
+            <div id="feedback"></div>
+             <div id="navigation">
+                <button id="next-btn" class="nav-btn hidden" onclick="nextQuestion()">Next Question</button>
+            </div>
+        </div>
+
+        <div id="score-container" class="hidden">
+            <div id="final-score">Your final score is: 0 / 15</div> <!-- Total is 15 -->
+            <button id="retake-btn" class="nav-btn" onclick="retakeQuiz()">Retake Quiz?</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+             { // Question 1 - Moved from Q15
+                question: "Why is 'Data Cleaning' considered such a critical and fundamental step for a professional data analyst?",
+                options: [
+                    "A) It primarily serves to make the final reports and visualizations look more aesthetically pleasing.",
+                    "B) Because unless you understand the data and have done what you can to clean the data your results and conclusions will be GIGO (Garbage-In-Garbage-Out).",
+                    "C) It is mainly a compliance requirement for data privacy regulations, not an analytical one.",
+                    "D) It significantly speeds up the processing time, which is its main benefit.",
+                    "E) It's often an optional step that experienced analysts skip to save time on projects."
+                ],
+                answer: "B) Because unless you understand the data and have done what you can to clean the data your results and conclusions will be GIGO (Garbage-In-Garbage-Out)."
+            },
+             { // Q2 - Was Q1
+                question: "What is the primary Pandas data structure for representing 2-dimensional, labeled tabular data, similar to a spreadsheet?",
+                options: ["A) Series", "B) ndarray", "C) DataFrame", "D) List", "E) Dictionary"],
+                answer: "C) DataFrame"
+            },
+            { // Q3 - Was Q2
+                question: "Which Pandas function is commonly used to load data from a Comma Separated Value (CSV) file into a DataFrame?",
+                options: ["A) pd.load_csv()", "B) pd.read_csv()", "C) pd.open_csv()", "D) pd.import_csv()", "E) pd.csv_to_dataframe()"],
+                answer: "B) pd.read_csv()"
+            },
+            { // Q4 - Was Q3
+                question: "What is the default marker used by Pandas to represent missing or 'Not a Number' values within a DataFrame?",
+                options: ["A) NULL", "B) None", "C) NA", "D) NaN", "E) '' (empty string)"],
+                answer: "D) NaN"
+            },
+            { // Q5 - Was Q4
+                question: "Which Pandas method would you use to get a boolean DataFrame indicating which values are missing?",
+                options: ["A) .missing()", "B) .hasna()", "C) .isnull()", "D) .find_nan()", "E) .notnull()"],
+                answer: "C) .isnull()"
+            },
+            { // Q6 - Was Q5
+                question: "To remove entire rows from a DataFrame that contain *any* missing (NaN) values, which method is typically used?",
+                options: ["A) df.remove_na()", "B) df.delete_missing()", "C) df.clean(missing=True)", "D) df.dropna()", "E) df.filter_nan()"],
+                answer: "D) df.dropna()"
+            },
+            { // Q7 - Was Q6
+                question: "According to the slides (slide 21), which Pandas function is used to concatenate (join together) two DataFrames, for example, one from a CSV and one from Excel?",
+                options: ["A) pd.merge()", "B) pd.join()", "C) pd.combine_frames()", "D) pd.append()", "E) pd.concat()"],
+                answer: "E) pd.concat()"
+            },
+            { // Q8 - Was Q7
+                question: "What Pandas method is used to identify and remove duplicate rows from a DataFrame?",
+                options: ["A) df.remove_duplicates()", "B) df.unique_rows()", "C) df.drop_duplicates()", "D) df.deduplicate()", "E) df.clean_duplicates()"],
+                answer: "C) df.drop_duplicates()"
+            },
+            { // Q9 - Was Q8
+                question: "Based on slide 6, what is a key benefit of using pseudocode *before* writing actual code?",
+                options: [
+                    "A) It automatically generates Python code.",
+                    "B) It guarantees the final code will be bug-free.",
+                    "C) It helps establish a logical structure without worrying about syntax.",
+                    "D) It replaces the need for code comments.",
+                    "E) It executes faster than Python for testing logic."
+                ],
+                answer: "C) It helps establish a logical structure without worrying about syntax."
+            },
+            { // Q10 - Was Q9
+                question: "Thinking about the benefits of pseudocode discussed (like establishing structure before syntax), how might writing high-level comments outlining your steps (sometimes called 'vibe coding') be *similar* to traditional pseudocode?",
+                options: [
+                    "A) Both involve writing syntactically perfect, executable code.",
+                    "B) Both focus primarily on low-level implementation details.",
+                    "C) Both serve as a way to plan the logic and flow before getting lost in specific code details.",
+                    "D) Neither are useful for communicating the program's design to others.",
+                    "E) 'vibe coding' replaces the need for any actual programming language."
+                ],
+                answer: "C) Both serve as a way to plan the logic and flow before getting lost in specific code details."
+            },
+             { // Q11 - Was Q10
+                question: "Which Pandas function is specifically designed to read data from Microsoft Excel files (`.xlsx` or `.xls`)?",
+                options: ["A) pd.read_csv()", "B) pd.read_excel()", "C) pd.load_excel()", "D) pd.read_table()", "E) pd.import_spreadsheet()"],
+                answer: "B) pd.read_excel()"
+            },
+            { // Q12 - Was Q11
+                question: "To quickly view the first 5 rows (by default) of a Pandas DataFrame named `df_data`, which method would you call?",
+                options: ["A) df_data.show(5)", "B) df_data.top()", "C) df_data.first(5)", "D) df_data.peek()", "E) df_data.head()"],
+                answer: "E) df_data.head()"
+            },
+            { // Q13 - Was Q12
+                question: "Why is JSON (JavaScript Object Notation) often considered a particularly convenient format for reading data into Python?",
+                options: [
+                    "A) It is the only format supported by the standard `json` library.",
+                    "B) Its structure (objects/arrays) maps very directly to Python dictionaries and lists.",
+                    "C) JSON files are typically much smaller than equivalent CSV files.",
+                    "D) Python was originally designed specifically for handling JSON data.",
+                    "E) JSON enforces strict data typing, preventing errors in Python."
+                ],
+                answer: "B) Its structure (objects/arrays) maps very directly to Python dictionaries and lists."
+            },
+            { // Q14 - Was Q13
+                question: "Considering the planning phase of coding, what is a key difference or trade-off between using pseudocode and process flow mapping (as mentioned on slide 6)?",
+                options: [
+                    "A) Flow mapping is better for detailed step-by-step logic, while pseudocode excels at visualizing high-level process connections.",
+                    "B) Pseudocode is a formal programming language, whereas flow mapping uses informal symbols.",
+                    "C) Flow mapping provides a visual overview of process flow, while pseudocode allows for more detailed, text-based description of specific logic steps.",
+                    "D) Both methods are equally effective for debugging complex algorithms.",
+                    "E) Pseudocode can only be understood by programmers, while flow maps are universally understandable."
+                ],
+                answer: "C) Flow mapping provides a visual overview of process flow, while pseudocode allows for more detailed, text-based description of specific logic steps."
+            },
+             { // Q15 - Was Q14
+                question: "In the context of data processing and data warehousing, what does the common acronym 'ETL' stand for?",
+                options: [
+                    "A) Execute, Test, Launch",
+                    "B) Export, Transmit, Link",
+                    "C) Estimate, Tally, Label",
+                    "D) Extract, Transform, Load",
+                    "E) Enter, Tabulate, List"
+                ],
+                answer: "D) Extract, Transform, Load"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswerCorrect = false;
+
+        const questionArea = document.getElementById('question-area');
+        const questionTextElement = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackElement = document.getElementById('feedback');
+        const nextButton = document.getElementById('next-btn');
+        const scoreContainer = document.getElementById('score-container');
+        const finalScoreElement = document.getElementById('final-score');
+        const retakeButton = document.getElementById('retake-btn');
+
+        function loadQuestion() {
+            // Reset state
+            feedbackElement.textContent = '';
+            feedbackElement.className = 'feedback';
+            optionsContainer.innerHTML = ''; // Clear previous options
+            nextButton.classList.add('hidden');
+            selectedAnswerCorrect = false; // Reset for the new question
+
+
+            if (currentQuestionIndex < quizData.length) {
+                const currentQuestion = quizData[currentQuestionIndex];
+                questionTextElement.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+
+                const optionLetters = ['A', 'B', 'C', 'D', 'E'];
+
+                currentQuestion.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    // Ensure options start with A), B), etc. if not already formatted
+                    const optionPrefix = optionLetters[index] + ') ';
+                    // Check if the option string already starts with the prefix (like "A) ...")
+                    const hasPrefix = new RegExp(`^${optionLetters[index]}\\) `).test(option);
+                    button.textContent = hasPrefix ? option : optionPrefix + option;
+                    button.classList.add('option-btn');
+                    // Updated answer checking logic: Check if the button's text *contains* the core answer text
+                    button.onclick = () => selectAnswer(button.textContent.includes(currentQuestion.answer), button);
+                    optionsContainer.appendChild(button);
+                });
+            } else {
+                showScore();
+            }
+        }
+
+         function selectAnswer(isCorrect, selectedButton) {
+            // Disable all buttons after selection
+            const buttons = optionsContainer.getElementsByTagName('button');
+            const currentQuestion = quizData[currentQuestionIndex];
+
+            for (let btn of buttons) {
+                btn.disabled = true;
+                 // Highlight correct/incorrect
+                 // Check if this button's text contains the answer text (handles prefix like "A) ")
+                 if (btn.textContent.includes(currentQuestion.answer)) {
+                    btn.classList.add('correct'); // Always highlight correct answer
+                 } else if (btn === selectedButton) {
+                     btn.classList.add('incorrect'); // Highlight selected button if incorrect
+                 }
+            }
+
+            if (isCorrect) {
+                score++;
+                feedbackElement.textContent = 'Correct!';
+                feedbackElement.className = 'feedback correct';
+                selectedAnswerCorrect = true;
+            } else {
+                feedbackElement.textContent = 'Incorrect.';
+                feedbackElement.className = 'feedback incorrect';
+                selectedAnswerCorrect = false; // Explicitly set
+            }
+
+            // Show next button (or trigger score display if last question)
+             if (currentQuestionIndex < quizData.length - 1) {
+                nextButton.classList.remove('hidden');
+            } else {
+                 nextButton.textContent = "Show Score"; // Change button text for clarity
+                 nextButton.classList.remove('hidden');
+            }
+        }
+
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+             if (currentQuestionIndex < quizData.length) {
+                 loadQuestion();
+                 nextButton.textContent = "Next Question"; // Reset button text if needed
+             } else {
+                 showScore();
+             }
+        }
+
+        function showScore() {
+            questionArea.classList.add('hidden');
+            scoreContainer.classList.remove('hidden');
+            finalScoreElement.textContent = `Your final score is: ${score} out of ${quizData.length}`; // Uses dynamic length (now 15)
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedAnswerCorrect = false;
+            scoreContainer.classList.add('hidden');
+            questionArea.classList.remove('hidden');
+            nextButton.textContent = "Next Question"; // Ensure button text is reset
+             nextButton.classList.add('hidden'); // Hide next initially
+            loadQuestion();
+        }
+
+        // Initial load
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>

@@ -129,7 +129,21 @@
 
     <script>
         const quizData = [
-             {
+            // *** NEW FIRST QUESTION ***
+            {
+                question: "Which factors primarily drove the development of Object-Oriented Programming (OOP) as an improvement over earlier procedural approaches?",
+                options: [
+                    "A. The need for faster raw execution speed on early computers.",
+                    "B. The desire to write code using fewer lines.",
+                    "C. The increasing complexity of software and the need for better organization, reusability, and modeling of real-world problems.",
+                    "D. The invention of graphical user interfaces (GUIs).",
+                    "E. The requirement to support only mathematical computations."
+                ],
+                correctIndex: 2, // C
+                explanation: "OOP emerged largely to address the challenges of managing large, complex software projects by providing better ways to structure code (objects, classes), improve reusability (inheritance), and model complex, real-world systems more intuitively."
+            },
+            // Original Q1 (now Q2)
+            {
                 question: "According to the presentation, Object-Oriented Programming primarily focuses on:",
                 options: [
                     "A. The sequence of steps and 'how to' perform tasks.",
@@ -141,6 +155,7 @@
                 correctIndex: 1,
                 explanation: "OOP focuses on 'things' (objects) and their interactions, modeling real-world entities, contrasting with procedural programming's focus on 'flow' and 'how to'."
             },
+            // Original Q2 (now Q3)
             {
                 question: "Which of the following is NOT listed as one of the main characteristics or pillars of Object-Oriented Programming?",
                 options: [
@@ -153,6 +168,7 @@
                 correctIndex: 4,
                 explanation: "Encapsulation, Inheritance, Polymorphism, and Abstraction are the core principles/pillars of OOP mentioned. Sequential execution is characteristic of procedural flow, not a unique OOP principle."
             },
+            // Original Q3 (now Q4)
             {
                 question: "In Python, what keyword is used to define a function?",
                 options: [
@@ -165,30 +181,46 @@
                 correctIndex: 2,
                 explanation: "The 'def' keyword is used in Python to start a function definition, followed by the function name and parentheses."
             },
+            // New Q4 (Abstraction) (now Q5)
             {
-                question: "What is the primary purpose of the 'import' statement in Python?",
+                question: "Which Object-Oriented Programming principle involves hiding the complex implementation details from the user and only exposing the essential features or functionalities?",
                 options: [
-                    "A. To print output to the console.",
-                    "B. To define a new class.",
-                    "C. To make code from external modules available for use.",
-                    "D. To handle errors and exceptions.",
-                    "E. To create loops for iteration."
-                ],
-                correctIndex: 2,
-                explanation: "The 'import' statement allows you to bring in code (functions, classes, variables) defined in other files (modules) into your current script."
+                    "A. Encapsulation",
+                    "B. Inheritance",
+                    "C. Abstraction",
+                    "D. Polymorphism",
+                    "E. Modularization"
+                 ],
+                correctIndex: 2, // C
+                explanation: "Abstraction focuses on hiding the internal complexities and showing only the necessary information or operations to the outside world."
             },
+            // New Q5 (Polymorphism) (now Q6)
             {
-                question: "Which Python module provides functions for generating random numbers, like `randint()` and `sample()`?",
+                question: "The ability in OOP for objects of different classes to be treated as objects of a common superclass, often responding to the same method call in different ways, is known as:",
                 options: [
-                    "A. math",
-                    "B. statistics",
-                    "C. sys",
-                    "D. random",
-                    "E. os"
-                ],
-                correctIndex: 3,
-                explanation: "The 'random' module in Python contains functions for various random operations, including generating random integers (`randint`), selecting random samples (`sample`), and shuffling sequences (`shuffle`)."
+                    "A. Abstraction",
+                    "B. Encapsulation",
+                    "C. Inheritance",
+                    "D. Polymorphism",
+                    "E. Instantiation"
+                 ],
+                correctIndex: 3, // D
+                explanation: "Polymorphism ('many forms') allows different objects to respond differently to the same message (method call), often facilitated by inheritance and method overriding."
             },
+            // *** REVISED Q6 (now Q7) (!pip install) ***
+            {
+                 question: "In environments like Jupyter Notebooks or Google Colab, what is achieved by running a command like `!pip install beautifulsoup4`?",
+                 options: [
+                    "A. It imports the beautifulsoup4 library for immediate use in the current script.",
+                    "B. The primary purpose of !pip install is to install Python packages (libraries) that are not pre-installed in the Colab environment.",
+                    "C. It updates the beautifulsoup4 library if it's already installed, but doesn't install it otherwise.",
+                    "D. It only checks if the beautifulsoup4 package is available in the Python Package Index (PyPI).",
+                    "E. It removes the beautifulsoup4 package from the environment."
+                 ],
+                correctIndex: 1, // B
+                explanation: "The `!` runs a shell command. `pip install <package_name>` uses Python's package installer (pip) to download and add packages from PyPI to the environment, making them available for import. This is necessary for packages not included by default."
+            },
+            // Original Q6 (now Q8)
             {
                 question: "According to the textbook section on CSV files, what does CSV stand for?",
                 options: [
@@ -201,6 +233,7 @@
                 correctIndex: 2,
                 explanation: "CSV stands for Comma-Separated Values, a common plain text format for storing tabular data where fields are separated by commas."
             },
+            // Original Q7 (now Q9)
             {
                 question: "In Python loops (like `for` and `while`), what is the significance of indentation?",
                 options: [
@@ -213,6 +246,7 @@
                 correctIndex: 1,
                 explanation: "Indentation is crucial in Python. It's used to define blocks of code, such as the statements that should be executed inside a loop or a function."
             },
+            // Original Q8 (now Q10)
             {
                 question: "What does the modulo operator (`%`) calculate in Python?",
                 options: [
@@ -225,6 +259,7 @@
                 correctIndex: 3,
                 explanation: "The modulo operator (%) returns the remainder after integer division. For example, `10 % 3` evaluates to `1`."
             },
+            // Original Q9 (now Q11)
             {
                 question: "Based on the OOP concepts diagram, a 'Class' is typically considered a blueprint, while an 'Object' is a(n):",
                 options: [
@@ -237,6 +272,7 @@
                 correctIndex: 0,
                 explanation: "A class acts as a template or blueprint, defining properties and methods. An object is a concrete instance created from that class."
             },
+            // Original Q10 (now Q12)
             {
                 question: "Which Python string method would be most suitable for checking if a string `my_str` begins with the substring 'Error:'?",
                 options: [
@@ -249,6 +285,7 @@
                 correctIndex: 3,
                 explanation: "The `startswith()` method specifically checks if a string begins with the specified prefix."
             },
+            // Original Q11 (now Q13)
             {
                 question: "The concept of bundling data (attributes) and methods (functions) that operate on the data within a single unit (object), and restricting access to some components, is known as:",
                 options: [
@@ -261,6 +298,7 @@
                 correctIndex: 3,
                 explanation: "Encapsulation is the bundling of data and methods together, often hiding the internal state (data hiding) and exposing functionality through methods."
             },
+            // Original Q12 (now Q14)
             {
                 question: "What is the purpose of the `return` statement within a Python function?",
                 options: [
@@ -273,6 +311,7 @@
                 correctIndex: 2,
                 explanation: "The `return` statement exits the function and optionally sends a specified value back to the part of the code that called the function."
             },
+            // Original Q13 (now Q15)
             {
                 question: "The review slide of `PDA_ETL1.ipynb` mentions converting data into which specific format/library structure for easy manipulation and transformation in Python?",
                 options: [
@@ -285,6 +324,7 @@
                 correctIndex: 4,
                 explanation: "The slide explicitly states that data needs to be converted into a pandas dataframe (df) format for easy manipulation and transformation in Python."
             },
+            // Original Q14 (now Q16)
             {
                 question: "Which built-in Python module, discussed in the textbook, provides common mathematical functions and constants like `pi`, `sqrt()`, and `cos()`?",
                 options: [
@@ -297,6 +337,7 @@
                 correctIndex: 2,
                 explanation: "The 'math' module contains standard mathematical functions (like square root, trigonometric functions) and constants (like pi)."
             },
+            // Original Q15 (now Q17)
             {
                  question: "Comparing Procedural and OOP approaches, which paradigm is generally considered better suited for large, complex projects due to features like reusability (objects, inheritance) and potentially better data security (encapsulation)?",
                 options: [

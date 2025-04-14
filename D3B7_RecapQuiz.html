@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3B6 Recap Quiz</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #quiz-container {
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #question-container {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        #options-container button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            background-color: #eee;
+            color: #333;
+            text-align: left;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #options-container button:hover:not(:disabled) {
+            background-color: #ddd;
+        }
+        #options-container button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        #feedback-container {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-style: italic;
+        }
+        .correct {
+            background-color: #c8e6c9 !important; /* Light green */
+            color: #2e7d32; /* Dark green text */
+            border-color: #a5d6a7 !important;
+        }
+        .incorrect {
+            background-color: #ffcdd2 !important; /* Light red */
+            color: #c62828; /* Dark red text */
+            border-color: #ef9a9a !important;
+        }
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f5e9; /* Very light green */
+            border: 1px solid #a5d6a7;
+            border-radius: 5px;
+            color: #1b5e20; /* Dark green text */
+        }
+         .explanation-incorrect {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ffebee; /* Very light red */
+            border: 1px solid #ef9a9a;
+            border-radius: 5px;
+            color: #c62828; /* Dark red text */
+        }
+        #navigation {
+            text-align: right;
+            margin-top: 20px;
+        }
+        #next-button, #retake-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #next-button:hover, #retake-button:hover {
+            background-color: #0056b3;
+        }
+        #score-container {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        /* Hide elements initially */
+        #feedback-container, #next-button, #score-container, #retake-button {
+            display: none;
+        }
+        .option-prefix {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>D3B6 Recap Quiz</h1>
+
+    <div id="quiz-container">
+        <div id="question-container"></div>
+        <div id="options-container"></div>
+        <div id="feedback-container"></div>
+        <div id="navigation">
+            <button id="next-button">Next Question</button>
+        </div>
+    </div>
+
+    <div id="score-container"></div>
+    <div id="navigation" style="text-align:center; margin-top: 15px;">
+         <button id="retake-button">Retake Quiz?</button>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "According to the APM BoK 7th Edition definition provided, what is a stakeholder?",
+                options: [
+                    "Only individuals who directly fund the project.",
+                    "Any individual or group working within the company.",
+                    "Individuals or groups who have an interest or role in the project, or may be impacted by it.",
+                    "Only external entities like customers and suppliers.",
+                    "Government departments and the media exclusively."
+                ],
+                answer: 2,
+                explanation: "Slide 15 explicitly defines stakeholders using the APM BoK definition as 'individuals or groups who have an interest or role in the project, or may be impacted by it.'"
+            },
+            {
+                question: "Which of the following is classified as a 'Tangible' barrier to communication in the presentation?",
+                options: [
+                    "Boredom",
+                    "Fear",
+                    "Personality clashes",
+                    "Professional jargon",
+                    "'Range-finding' (understanding)"
+                ],
+                answer: 3,
+                explanation: "Slide 11 lists 'Language (usage – e.g. professional jargon)' under Tangible barriers, which are considered 'Straightforward to address'. The others are listed as Intangible barriers."
+            },
+            {
+                question: "In the 'Iceberg Problem' model (Slide 13), which element is considered 'Above the waterline' and easier to influence?",
+                options: [
+                    "Beliefs",
+                    "Values",
+                    "Attitudes",
+                    "Behaviours and Actions",
+                    "Hidden Agendas"
+                ],
+                answer: 3,
+                explanation: "Slide 13 clearly shows 'BEHAVIOURS and ACTIONS' at the top, above the waterline, described as 'Visible and easier to influence'."
+            },
+            {
+                question: "What is the recommended strategy for dealing with stakeholders identified as 'Sleeping Giants' (High Power, Low Attention) in the Power/Attention matrix?",
+                options: [
+                    "Engage and actively seek to influence",
+                    "Minimal effort, monitor for changes",
+                    "Keep informed and interested",
+                    "Keep satisfied and informed",
+                    "Ignore them as they have low attention"
+                ],
+                answer: 3,
+                explanation: "Slide 21 shows that the strategy for 'SLEEPING GIANTS' (High Power, Low Attention) is to 'Keep satisfied and informed'."
+            },
+            {
+                question: "According to the 'better model' for stakeholder profiling (Slide 22), what term describes stakeholders with High Power who are strongly FOR the data project?",
+                options: [
+                    "Blockers",
+                    "Agitators",
+                    "Candidate evangelists",
+                    "Enthusiasts",
+                    "Evangelists"
+                ],
+                answer: 4,
+                explanation: "Slide 22 places 'Evangelists' in the top-right quadrant, representing High Power and High Interest FOR the project."
+            },
+            {
+                question: "Based on Shannon's model of communication (Slide 9), what potential problem occurs between the 'Transmitted message' and the 'Received message'?",
+                options: [
+                    "Encoding failure",
+                    "Decoding bias",
+                    "Noise sources interfering",
+                    "Lack of information source",
+                    "Incorrect response outcome"
+                ],
+                answer: 2,
+                explanation: "Slide 9 depicts 'Noise sources' interfering with the signal between the 'Transmitted message' and the 'Received message'."
+            },
+             {
+                question: "What is listed as a potential *disadvantage* of having deep domain expertise in an analytics project?",
+                options: [
+                    "Ability to talk in the language of the sector.",
+                    "Better understanding of decisions made based on the analysis.",
+                    "Confidence of customers/clients.",
+                    "Risk of knowledge becoming outdated due to an insular approach.",
+                    "Awareness of common data issues."
+                ],
+                answer: 3,
+                explanation: "Slide 29 lists 'Risk that your knowledge becomes out of date through the insular nature of your approach' as a disadvantage of domain expertise."
+            },
+            {
+                question: "The stakeholder engagement process adapted from APM BoK (Slide 17) involves five steps. What is the step *after* 'Assess current attitudes and spheres of influence'?",
+                options: [
+                    "Identify your stakeholders",
+                    "Engage and influence stakeholders",
+                    "Monitor changes in perception and engagement",
+                    "Develop the project communications action plan",
+                    "Define project scope"
+                ],
+                answer: 3,
+                explanation: "Slide 17 shows the sequence: 1. Identify -> 2. Assess attitudes -> 3. Develop comms plan -> 4. Engage -> 5. Monitor. So, after step 2 comes step 3: Develop the project communications action plan."
+            },
+             {
+                question: "In the analytics project lifecycle shown on Slide 5, what is the final stage (Stage 9)?",
+                options: [
+                    "Data visualisation",
+                    "Data analysis",
+                    "Actionable results and execution",
+                    "Business case development",
+                    "Data validation and cleansing"
+                ],
+                answer: 2,
+                explanation: "Slide 5 clearly labels Stage 9 as 'Actionable results and execution', highlighted in red."
+            },
+             {
+                question: "According to the discussion activity solution (Slide 7), what is a primary need/want for 'Brokers and shareholders' regarding the Annual Report?",
+                options: [
+                    "Early sight of R&D developments",
+                    "Clear objective information and trend data",
+                    "Conformance to relevant laws",
+                    "Positive results to support pay rises",
+                    "An efficient and trouble-free audit"
+                ],
+                answer: 1,
+                explanation: "Slide 7 lists 'Clear objective information. Trend data' as the 'Needs and wants' for the 'Brokers and shareholders' stakeholder group."
+            },
+            {
+                question: "Which of the following is presented as a 'Hidden complexity' in stakeholder communication (Slide 12)?",
+                options: [
+                    "Noisy environments making it hard to hear",
+                    "Using the wrong communication medium like email instead of a call",
+                    "Visible or stated attitudes differing from actual attitudes (hidden agendas)",
+                    "Physical distance and time differences",
+                    "Language barriers due to foreign dialects"
+                ],
+                answer: 2,
+                explanation: "Slide 12 explicitly states that stakeholder communication 'Can be complex: Because visible or stated attitudes may differ from actual attitudes. Hidden agendas etc.'"
+            },
+            {
+                question: "What goal of data visualisation is mentioned alongside understanding and storytelling on Slide 4?",
+                options: [
+                    "Complexity",
+                    "Ambiguity",
+                    "Advocacy",
+                    "Obfuscation",
+                    "Automation"
+                ],
+                answer: 2,
+                explanation: "Slide 4 lists 'The goal of data visualisation – understanding and storytelling advocacy'."
+            },
+            {
+                question: "Which behaviour is listed as a *positive* attitude/behaviour for building influence on Slide 30?",
+                options: [
+                    "Blaming",
+                    "Inconsistency",
+                    "Negativity",
+                    "Empathy",
+                    "Expectations mismanagement"
+                ],
+                answer: 3,
+                explanation: "Slide 30 shows 'Empathy' listed under 'Positive attitudes and behaviours' used for building influence. The others are listed as negative."
+            },
+            {
+                question: "Peter Drucker's quote, 'The most important thing in communication is hearing what isn't said,' primarily emphasizes the importance of:",
+                options: [
+                    "Speaking loudly and clearly.",
+                    "Using complex vocabulary.",
+                    "Understanding underlying emotions, biases, and unspoken messages.",
+                    "Focusing only on factual data presented.",
+                    "Ensuring the message is transmitted without noise."
+                ],
+                answer: 2,
+                explanation: "Slide 31 uses the Drucker quote to highlight the significance of recognizing emotional reactions, preconceptions, biases, hidden agendas, and carefully listening for unspoken cues – the 'what isn't said'."
+            },
+            {
+                question: "In the Power/Attention matrix (Slide 21), stakeholders with Low Power but High Attention, who might be vocal but lack direct influence, are termed:",
+                options: [
+                    "Sleeping Giants",
+                    "Silent Constituents",
+                    "Evangelists",
+                    "Blockers",
+                    "Gadflies"
+                ],
+                answer: 4,
+                explanation: "Slide 21 identifies stakeholders in the Low Power, High Attention quadrant as 'GADFLIES', recommending to 'Keep informed and interested'."
+            }
+        ];
+
+        const quizContainer = document.getElementById('quiz-container');
+        const questionContainer = document.getElementById('question-container');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackContainer = document.getElementById('feedback-container');
+        const nextButton = document.getElementById('next-button');
+        const scoreContainer = document.getElementById('score-container');
+        const retakeButton = document.getElementById('retake-button');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const optionLabels = ['A', 'B', 'C', 'D', 'E'];
+
+        function loadQuestion() {
+            feedbackContainer.style.display = 'none';
+            feedbackContainer.innerHTML = '';
+            feedbackContainer.className = 'feedback-container'; // Reset class
+            optionsContainer.innerHTML = '';
+            nextButton.style.display = 'none';
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionContainer.innerText = `Question ${currentQuestionIndex + 1}: ${currentQuestion.question}`;
+
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.innerHTML = `<span class="option-prefix">${optionLabels[index]}.</span> ${option}`;
+                button.addEventListener('click', () => selectAnswer(index));
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selectedIndex) {
+            const currentQuestion = quizData[currentQuestionIndex];
+            const correctIndex = currentQuestion.answer;
+            const buttons = optionsContainer.getElementsByTagName('button');
+
+            // Disable all buttons
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = true;
+            }
+
+            // Provide feedback
+            feedbackContainer.style.display = 'block';
+            if (selectedIndex === correctIndex) {
+                score++;
+                buttons[selectedIndex].classList.add('correct');
+                feedbackContainer.innerHTML = `<strong>Correct!</strong><div class="explanation">${currentQuestion.explanation}</div>`;
+                feedbackContainer.classList.add('explanation'); // Use green explanation box style
+            } else {
+                buttons[selectedIndex].classList.add('incorrect');
+                 buttons[correctIndex].classList.add('correct'); // Also highlight the correct one
+                feedbackContainer.innerHTML = `<strong>Incorrect.</strong> The correct answer was ${optionLabels[correctIndex]}.<div class="explanation-incorrect">${currentQuestion.explanation}</div>`;
+                 feedbackContainer.classList.add('explanation-incorrect'); // Use red explanation box style
+            }
+
+            // Show next/finish button
+            if (currentQuestionIndex < quizData.length - 1) {
+                nextButton.innerText = 'Next Question';
+                nextButton.style.display = 'block';
+            } else {
+                nextButton.innerText = 'Show Score';
+                nextButton.style.display = 'block';
+            }
+        }
+
+        function showScore() {
+            quizContainer.style.display = 'none';
+            scoreContainer.innerHTML = `Your final score is ${score} out of ${quizData.length}.`;
+            scoreContainer.style.display = 'block';
+            retakeButton.style.display = 'inline-block'; // Use inline-block for centering if needed
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreContainer.style.display = 'none';
+            retakeButton.style.display = 'none';
+            quizContainer.style.display = 'block';
+            loadQuestion();
+        }
+
+        nextButton.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                showScore();
+            }
+        });
+
+        retakeButton.addEventListener('click', retakeQuiz);
+
+        // Initial load
+        loadQuestion();
+
+    </script>
+
+</body>
+</html>

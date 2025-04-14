@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDA6 Recap Quiz</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .quiz-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .question-container {
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .options button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            text-align: left;
+            background-color: #e7e7e7;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        .options button:hover:not([disabled]) {
+            background-color: #ddd;
+        }
+        .options button.correct {
+            background-color: #d4edda; /* Light green */
+            border-color: #c3e6cb;
+            color: #155724; /* Dark green */
+            font-weight: bold;
+        }
+        .options button.incorrect {
+            background-color: #f8d7da; /* Light red */
+            border-color: #f5c6cb;
+            color: #721c24; /* Dark red */
+        }
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-style: italic;
+        }
+        .explanation.correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .explanation.incorrect {
+             background-color: #f8d7da;
+             color: #721c24;
+        }
+        .nav-button {
+            display: block;
+            width: 150px;
+            padding: 10px 20px;
+            margin: 20px auto 0;
+            font-size: 1em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .nav-button:hover {
+            background-color: #0056b3;
+        }
+        .score-container {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 30px;
+        }
+        .hidden {
+            display: none;
+        }
+        .option-label {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>PDA6 Recap Quiz</h1>
+
+    <div class="quiz-container">
+        <div id="question-area">
+            <div class="question-container">
+                <p id="question-text" class="question-text"></p>
+                <div id="options" class="options">
+                    <!-- Options will be loaded here -->
+                </div>
+                <p id="explanation" class="explanation hidden"></p>
+            </div>
+            <button id="next-btn" class="nav-button hidden">Next Question</button>
+        </div>
+
+        <div id="score-area" class="score-container hidden">
+            <p id="score-text"></p>
+            <button id="retake-btn" class="nav-button">Retake Quiz?</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { // New Q1
+                question: "Why is creating charts and visualisations considered essential in data analysis and business reporting?",
+                options: [
+                    "To make reports look more colourful and engaging.",
+                    "To help understand patterns, trends, and relationships in data that might be missed in raw numbers.",
+                    "Because programming libraries require graphical output.",
+                    "To replace the need for written explanations and conclusions.",
+                    "To increase the file size of the analysis report."
+                ],
+                answer: 1,
+                explanation: "Visualisations are crucial because humans are visual creatures; charts help quickly identify patterns, trends, outliers, and relationships that are hard to spot in tables of data (as mentioned in the study guide introduction)."
+            },
+            { // Old Q1 -> New Q2
+                question: "Which library is the primary focus for creating basic 2D plots like line and scatter graphs in the materials?",
+                options: [
+                    "Seaborn",
+                    "Plotly",
+                    "Matplotlib",
+                    "Bokeh",
+                    "SweetVIZ"
+                ],
+                answer: 2,
+                explanation: "Matplotlib (specifically the `pyplot` module) is presented as the fundamental library for creating various 2D plots."
+            },
+            { // Old Q2 -> New Q3
+                question: "How is the `pyplot` module typically imported for use?",
+                options: [
+                    "import pyplot",
+                    "import matplotlib as plt",
+                    "import matplotlib.pyplot as plt",
+                    "from matplotlib import pyplot",
+                    "load library pyplot"
+                ],
+                answer: 2,
+                explanation: "The standard convention shown in the examples is `import matplotlib.pyplot as plt`."
+            },
+            { // Old Q3 -> New Q4
+                question: "Which function is used to create a basic line plot in Matplotlib?",
+                options: [
+                    "plt.line()",
+                    "plt.plot()",
+                    "plt.scatter()",
+                    "plt.bar()",
+                    "plt.draw()"
+                ],
+                answer: 1,
+                explanation: "`plt.plot()` is the core function for creating line graphs, although it can also plot markers."
+            },
+            { // Old Q4 -> New Q5
+                question: "What function is used to display the plot after defining it?",
+                options: [
+                    "plt.render()",
+                    "plt.display()",
+                    "plt.execute()",
+                    "plt.show()",
+                    "plt.print()"
+                ],
+                answer: 3,
+                explanation: "`plt.show()` actually renders and displays the figure window containing the plot(s)."
+            },
+            { // Old Q5 -> New Q6
+                question: "How can you save a generated Matplotlib figure to a file?",
+                options: [
+                    "plt.save('figure.png')",
+                    "plt.export('figure.pdf')",
+                    "plt.write('figure.jpg')",
+                    "plt.output('figure.svg')",
+                    "plt.savefig('figure.png')"
+                ],
+                answer: 4,
+                explanation: "`plt.savefig()` is the function used to save the current figure, supporting various formats like PNG, PDF, SVG etc."
+            },
+            { // Old Q6 -> New Q7
+                question: "Which parameter in `plt.plot()` controls the transparency of a line or marker?",
+                options: [
+                    "transparent",
+                    "opacity",
+                    "alpha",
+                    "visibility",
+                    "clear"
+                ],
+                answer: 2,
+                explanation: "The `alpha` parameter controls the transparency, with values ranging from 0 (fully transparent) to 1 (fully opaque)."
+            },
+             { // Old Q8 -> New Q8
+                question: "Which library, often built on top of Matplotlib, is highlighted for creating statistical visualizations like heatmaps and box plots?",
+                options: [
+                    "NumPy",
+                    "Pandas",
+                    "SciPy",
+                    "Seaborn",
+                    "SweetVIZ"
+                ],
+                answer: 3,
+                explanation: "Seaborn is specifically mentioned and demonstrated for creating more complex statistical plots like heatmaps and box plots, often with less code than pure Matplotlib."
+            },
+             { // New Q9 (Heatmap purpose)
+                question: "What is the primary purpose of using a Heatmap, as demonstrated with Seaborn?",
+                options: [
+                    "To show the distribution of a single variable over time.",
+                    "To compare exact values between different categories.",
+                    "To visualize the magnitude of values across two dimensions, often showing correlation or matrix data.",
+                    "To plot individual data points based on two variables.",
+                    "To display hierarchical data in a tree-like structure."
+                ],
+                answer: 2,
+                explanation: "Heatmaps use color intensity to represent the magnitude of values in a matrix, making them ideal for visualizing correlation matrices or other 2D datasets where relative intensity is important."
+            },
+            { // Old Q9 -> New Q10
+                question: "What function in Seaborn is used to create a correlation heatmap?",
+                options: [
+                    "sns.corrplot()",
+                    "sns.heatmap()",
+                    "sns.matrixplot()",
+                    "sns.clustermap()",
+                    "sns.histplot()"
+                ],
+                answer: 1,
+                explanation: "The examples clearly show `sns.heatmap()` being used to visualize a correlation matrix."
+            },
+            { // Old Q10 -> New Q11
+                 question: "Which parameter is used to change the thickness of a line in `plt.plot()`?",
+                 options: [
+                    "thickness",
+                    "width",
+                    "linewidth",
+                    "linesize",
+                    "stroke"
+                ],
+                answer: 2,
+                explanation: "The `linewidth` parameter controls the thickness of the plotted line."
+            },
+             { // Old Q11 -> New Q12
+                question: "What do `plt.title()`, `plt.xlabel()`, and `plt.ylabel()` functions do?",
+                options: [
+                    "Set the figure size, x-axis range, and y-axis range",
+                    "Set the plot title, x-axis label, and y-axis label",
+                    "Control the legend title, x-tick labels, and y-tick labels",
+                    "Define the plot theme, x-axis style, and y-axis style",
+                    "Add text annotations at the title, x-axis, and y-axis positions"
+                ],
+                answer: 1,
+                explanation: "These functions are used to add descriptive text: `plt.title()` for the main title, `plt.xlabel()` for the horizontal axis label, and `plt.ylabel()` for the vertical axis label."
+            },
+            { // Old Q12 -> New Q13
+                question: "Which tool was mentioned for generating quick Exploratory Data Analysis (EDA) reports with visualizations automatically?",
+                options: [
+                    "Matplotlib",
+                    "Seaborn",
+                    "SweetVIZ",
+                    "Pandas Profiling",
+                    "Plotly Express"
+                ],
+                answer: 2,
+                explanation: "SweetVIZ was shown in Slide 6 as a tool for rapid EDA, producing reports that include various plots."
+            },
+            { // Old Q13 -> New Q14
+                question: "How can you create multiple plots within a single figure using Matplotlib?",
+                options: [
+                    "Using `plt.add_plot()`",
+                    "Using `plt.figure(multiple=True)`",
+                    "Using `plt.subplot()` or `plt.subplots()`",
+                    "Using `plt.combine_plots()`",
+                    "Calling `plt.plot()` multiple times automatically creates subplots"
+                ],
+                answer: 2,
+                explanation: "The `plt.subplot()` function (for adding one subplot at a time) or `plt.subplots()` (for creating a grid of subplots) are the standard ways to achieve this."
+             },
+            { // Old Q15 -> New Q15
+                 question: "What parameter is used to set the shape of markers in `plt.plot()`?",
+                 options: [
+                     "shape",
+                     "point",
+                     "style",
+                     "marker",
+                     "glyph"
+                 ],
+                 answer: 3,
+                 explanation: "The `marker` parameter accepts string codes (like 'o', '+', '*', 's') to define the shape used at each data point."
+             }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const questionTextElement = document.getElementById('question-text');
+        const optionsElement = document.getElementById('options');
+        const explanationElement = document.getElementById('explanation');
+        const nextBtn = document.getElementById('next-btn');
+        const questionArea = document.getElementById('question-area');
+        const scoreArea = document.getElementById('score-area');
+        const scoreTextElement = document.getElementById('score-text');
+        const retakeBtn = document.getElementById('retake-btn');
+        const optionLabels = ['A', 'B', 'C', 'D', 'E'];
+
+        function loadQuestion() {
+            explanationElement.classList.add('hidden');
+            explanationElement.textContent = '';
+            explanationElement.classList.remove('correct', 'incorrect'); // Reset explanation style
+            nextBtn.classList.add('hidden');
+
+            const currentQuestion = questions[currentQuestionIndex];
+            questionTextElement.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+
+            optionsElement.innerHTML = ''; // Clear previous options
+
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.innerHTML = `<span class="option-label">${optionLabels[index]}.</span> ${option}`;
+                button.onclick = () => selectAnswer(index);
+                // Reset button styles and state
+                button.disabled = false;
+                button.classList.remove('correct', 'incorrect');
+                button.style.cursor = 'pointer';
+                optionsElement.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selectedIndex) {
+            const currentQuestion = questions[currentQuestionIndex];
+            const buttons = optionsElement.getElementsByTagName('button');
+
+            // Disable all buttons after selection
+            for (let button of buttons) {
+                button.disabled = true;
+                button.style.cursor = 'not-allowed';
+            }
+
+            const selectedButton = buttons[selectedIndex];
+            const correctIndex = currentQuestion.answer;
+
+            explanationElement.textContent = currentQuestion.explanation;
+            explanationElement.classList.remove('hidden');
+
+            if (selectedIndex === correctIndex) {
+                score++;
+                selectedButton.classList.add('correct');
+                explanationElement.classList.add('correct');
+                explanationElement.classList.remove('incorrect');
+            } else {
+                selectedButton.classList.add('incorrect');
+                buttons[correctIndex].classList.add('correct'); // Highlight the correct answer
+                explanationElement.classList.add('incorrect');
+                explanationElement.classList.remove('correct');
+            }
+
+            // Show next/finish button
+             if (currentQuestionIndex < questions.length - 1) {
+                nextBtn.textContent = 'Next Question';
+            } else {
+                nextBtn.textContent = 'Show Score';
+            }
+            nextBtn.classList.remove('hidden');
+        }
+
+        function showScore() {
+            questionArea.classList.add('hidden');
+            scoreArea.classList.remove('hidden');
+            scoreTextElement.textContent = `Your final score is ${score} out of ${questions.length}!`;
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                showScore();
+            }
+        });
+
+        retakeBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreArea.classList.add('hidden');
+            questionArea.classList.remove('hidden');
+            loadQuestion();
+        });
+
+        // Initial load
+        loadQuestion();
+
+    </script>
+
+</body>
+</html>

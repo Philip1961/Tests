@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDA7 Recap Quiz</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #quiz-container { /* Keep this container */
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px; /* Add margin if needed */
+        }
+        #question-area, #options-area, #feedback-area, #navigation-area {
+             /* These will be hidden at the end */
+             margin-bottom: 15px;
+        }
+
+        #options-area button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            text-align: left;
+            background-color: #e7e7e7;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        #options-area button:hover:not(:disabled) {
+            background-color: #ddd;
+        }
+        #options-area button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        #feedback-area {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .correct-option {
+             background-color: #a3d8b0 !important;
+             border-color: #87c999 !important;
+        }
+        .explanation {
+             margin-top: 10px;
+             font-size: 0.9em;
+             font-style: italic;
+             color: #333;
+        }
+
+        #navigation-area {
+            margin-top: 25px;
+            text-align: right;
+        }
+        #navigation-area button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        #navigation-area button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #score-area { /* This is outside quiz-container */
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+        }
+        #score-area button { /* Style for the retake button */
+             margin-top: 15px;
+             padding: 10px 20px;
+             background-color: #28a745;
+             color: white;
+             border: none;
+             border-radius: 5px;
+             cursor: pointer;
+             font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>PDA7 Recap Quiz</h1>
+
+    <!-- Container for active quiz elements -->
+    <div id="quiz-container">
+        <div id="question-area">
+            <p id="question-text"></p>
+        </div>
+        <div id="options-area">
+            <!-- Option buttons will be loaded here -->
+        </div>
+        <div id="feedback-area" style="display: none;">
+            <!-- Feedback will be shown here -->
+        </div>
+        <div id="navigation-area">
+            <button id="next-button" disabled>Next Question</button>
+        </div>
+    </div>
+
+    <!-- Container for final score and retake button -->
+    <div id="score-area" style="display: none;">
+         <!-- Score and button will be populated by JS -->
+         <button id="retake-button" style="display: none;">Retake Quiz?</button> <!-- Hide initially -->
+    </div>
+
+    <script>
+        const questions = [
+             {
+                 question: "According to the Complexity-Value (CV) Model presented, which type of data analysis answers the question 'Why did it happen?'",
+                 options: ["A. Descriptive", "B. Predictive", "C. Diagnostic", "D. Agentic", "E. Hindsight"],
+                 correctAnswer: "C",
+                 explanation: "The CV model shows that Diagnostic analysis addresses 'Why did it happen?' sitting between Descriptive and Predictive on the complexity axis."
+             },
+             {
+                 question: "Which type of Machine Learning deals primarily with labeled datasets and includes processes like Classification and Regression?",
+                 options: ["A. Un-supervised Learning", "B. Reinforcement Learning", "C. Semi-Supervised Learning", "D. Supervised Learning", "E. Dimensionality Reduction"],
+                 correctAnswer: "D",
+                 explanation: "Supervised Learning uses labeled datasets as input and commonly involves tasks like Classification and Regression."
+             },
+             {
+                 question: "What is the primary purpose of using a heatmap in data analysis, as suggested by the course materials?",
+                 options: ["A. To display the distribution of a single variable", "B. To visualise correlations and linkages between factors", "C. To plot time-series data", "D. To perform hypothesis testing", "E. To clean raw data"],
+                 correctAnswer: "B",
+                 explanation: "Heatmaps are particularly useful for visualizing the strength and direction of correlations between multiple variables in a dataset."
+             },
+             {
+                 question: "As defined in the presentation, what is a hypothesis in the context of data analysis?",
+                 options: ["A. A final conclusion drawn from data", "B. A type of data visualization", "C. A mathematically testable version of a hunch, intuition, or assertion", "D. The raw data collected for analysis", "E. A specific Python library"],
+                 correctAnswer: "C",
+                 explanation: "A hypothesis provides a specific, testable proposition about a relationship or difference that can be investigated using statistical methods."
+             },
+             {
+                 question: "In hypothesis testing, what is the Null Hypothesis (H0)?",
+                 options: ["A. The hypothesis the researcher is trying to prove", "B. The situation we are trying to build evidence *against*", "C. The conclusion reached after the test", "D. A hypothesis that involves multiple variables", "E. The hypothesis that always assumes a difference exists"],
+                 correctAnswer: "B",
+                 explanation: "The Null Hypothesis typically represents a statement of 'no effect' or 'no difference', which the statistical test aims to potentially reject based on evidence."
+             },
+              {
+                 question: "Which term describes the situation where a model learns the existing data, including random fluctuations, too well, leading to poor performance on new data?",
+                 options: ["A. Underfitting", "B. Regression", "C. Overfitting", "D. Classification", "E. Feature Engineering"],
+                 correctAnswer: "C",
+                 explanation: "Overfitting occurs when a model becomes too complex and captures noise in the training data, making it less generalizable to unseen data."
+             },
+             {
+                 question: "According to the library popularity chart shown, which Python library was indicated as the most popular for data science and machine learning among respondents?",
+                 options: ["A. TensorFlow", "B. Keras", "C. PyTorch", "D. Scikit-learn", "E. Xgboost"],
+                 correctAnswer: "D",
+                 explanation: "The survey results presented showed Scikit-learn having the highest usage percentage among the listed libraries."
+             },
+             {
+                 question: "What is the main goal of regression analysis as described?",
+                 options: ["A. To group similar data points together", "B. To build a model describing the effect of input variables on an output variable", "C. To reduce the number of variables in a dataset", "D. To test if two sample means are significantly different", "E. To find anomalies in the data"],
+                 correctAnswer: "B",
+                 explanation: "Regression aims to model the relationship between independent input variables (features) and a dependent output variable."
+             },
+             {
+                 question: "Which of these approaches is not a generally recognised form of machine learning?",
+                 options: ["A. Supervised Learning", "B. Un-supervised Learning", "C. Descriptive Learning", "D. Semi-Supervised Learning", "E. Reinforcement Learning"],
+                 correctAnswer: "C",
+                 explanation: "Supervised, Un-supervised, Semi-Supervised, and Reinforcement Learning are established categories of machine learning. Descriptive *analysis* is a type of data analysis focused on summarizing past data, not typically classified as a form of machine learning itself."
+             },
+              {
+                 question: "In the context of the presented data analytics process in Python, which step often logically follows evaluating potential techniques?",
+                 options: ["A. MANAGE STAKEHOLDERS", "B. UNDERLYING STATISTICS", "C. SELECT LIBRARIES", "D. DESIGN CODE", "E. DEFINE BUSINESS OBJECTIVES"],
+                 correctAnswer: "C",
+                 explanation: "After evaluating which analytical techniques are suitable, a common next step is selecting the specific software libraries (like Pandas, Scikit-learn, etc.) needed to implement those techniques."
+             },
+             {
+                 question: "In regression, what does a residual represent?",
+                 options: ["A. The predicted value (f(xi))", "B. The input variable (xi)", "C. The difference between the actual response and the predicted response (yi - f(xi))", "D. The slope of the regression line (b1)", "E. The intercept of the regression line (b0)"],
+                 correctAnswer: "C",
+                 explanation: "A residual is the error term in regression, measuring the vertical distance between an actual data point and the point predicted by the regression model."
+             },
+             {
+                 question: "Which Python package was highlighted as bundling algorithms for classification, regression, clustering, and being a preferred library to learn ML with Python?",
+                 options: ["A. Pandas", "B. NumPy", "C. Matplotlib", "D. Sci-Kit Learn", "E. TensorFlow"],
+                 correctAnswer: "D",
+                 explanation: "Sci-Kit Learn is well-known for providing a comprehensive and consistent interface to a wide range of common machine learning algorithms, making it popular for learning and general ML tasks."
+             },
+              {
+                 question: "In the suggested report structure, what content is typically included in an appendix labelled 'Pseudocode'?",
+                 options: ["A. The actual Python script", "B. Recommendations for future work", "C. Validation results using Excel", "D. A plain language, step-by-step description of the code's logic", "E. A list of cited sources"],
+                 correctAnswer: "D",
+                 explanation: "Pseudocode is an informal, high-level description of the operating principle of a computer program or other algorithm, intended for human reading rather than machine reading."
+             },
+             {
+                  question: "What is a key difference in the primary purpose or focus between Scikit-learn and TensorFlow?",
+                  options: [
+                      "A. Scikit-learn focuses on data visualization, TensorFlow on data cleaning.",
+                      "B. Scikit-learn is primarily for traditional ML algorithms (regression, clustering, SVMs), while TensorFlow is geared towards deep learning and neural networks.",
+                      "C. Scikit-learn is a commercial product, TensorFlow is open-source.",
+                      "D. Scikit-learn is written in R, TensorFlow in Python.",
+                      "E. Scikit-learn handles only numerical data, TensorFlow handles text and images."
+                  ],
+                  correctAnswer: "B",
+                  explanation: "While both are powerful Python libraries, Scikit-learn excels with a broad range of classic machine learning algorithms, whereas TensorFlow (often used with Keras) is specifically designed for building, training, and deploying large-scale neural networks, particularly for deep learning."
+             },
+             {
+                 question: "Which type of analysis in the CV model deals with 'Response? How to (autonomously) execute?' and is associated with 'Decision making & autonomous control'?",
+                 options: ["A. Descriptive", "B. Diagnostic", "C. Predictive", "D. Agentic", "E. Insight"],
+                 correctAnswer: "D",
+                 explanation: "Agentic analysis represents the highest level in the presented CV model, focusing on automated decision-making and action based on insights derived from predictive and other forms of analysis."
+             }
+         ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let questionsAnswered = false;
+
+        // --- Wrap main logic in DOMContentLoaded ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM fully loaded and parsed");
+
+            // Get references to elements *after* DOM is ready
+            const quizContainerElement = document.getElementById('quiz-container');
+            const questionAreaElement = document.getElementById('question-area');
+            const questionTextElement = document.getElementById('question-text');
+            const optionsAreaElement = document.getElementById('options-area');
+            const feedbackAreaElement = document.getElementById('feedback-area');
+            const navigationAreaElement = document.getElementById('navigation-area');
+            const nextButtonElement = document.getElementById('next-button');
+            const scoreAreaElement = document.getElementById('score-area');
+            const retakeButtonElement = document.getElementById('retake-button');
+
+            // Check if elements were found (for debugging)
+            if (!quizContainerElement || !questionAreaElement || !optionsAreaElement || !feedbackAreaElement || !navigationAreaElement || !nextButtonElement || !scoreAreaElement || !retakeButtonElement) {
+                console.error("One or more essential HTML elements not found!");
+                return; // Stop script if elements are missing
+            }
+
+            function loadQuestion() {
+                questionsAnswered = false;
+                feedbackAreaElement.style.display = 'none';
+                feedbackAreaElement.className = '';
+                feedbackAreaElement.innerHTML = '';
+
+                // Ensure quiz sections are visible when loading a question
+                questionAreaElement.style.display = 'block';
+                optionsAreaElement.style.display = 'block';
+                navigationAreaElement.style.display = 'block';
+
+
+                const currentQuestion = questions[currentQuestionIndex];
+                questionTextElement.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+
+                optionsAreaElement.innerHTML = '';
+                currentQuestion.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    const optionLetter = String.fromCharCode(65 + index);
+                    button.textContent = option;
+                    button.dataset.option = optionLetter;
+                    button.addEventListener('click', selectAnswer);
+                    optionsAreaElement.appendChild(button);
+                });
+
+                if (currentQuestionIndex === questions.length - 1) {
+                    nextButtonElement.textContent = 'Show Results';
+                    console.log("Setting button text to 'Show Results' for question index:", currentQuestionIndex);
+                } else {
+                    nextButtonElement.textContent = 'Next Question';
+                    console.log("Setting button text to 'Next Question' for question index:", currentQuestionIndex);
+                }
+
+                nextButtonElement.disabled = true;
+            }
+
+            function selectAnswer(event) {
+                if (questionsAnswered) return;
+
+                questionsAnswered = true;
+                const selectedButton = event.target;
+                const selectedOption = selectedButton.dataset.option;
+                const currentQuestion = questions[currentQuestionIndex];
+                const correctOptionLetter = currentQuestion.correctAnswer;
+
+                const optionButtons = optionsAreaElement.getElementsByTagName('button');
+                for (let button of optionButtons) {
+                    button.disabled = true;
+                    if (button.dataset.option === correctOptionLetter) {
+                        button.classList.add('correct-option');
+                    }
+                }
+
+                feedbackAreaElement.style.display = 'block'; // Show feedback
+
+                let feedbackHTML = '';
+                if (selectedOption === correctOptionLetter) {
+                    score++;
+                    feedbackAreaElement.classList.add('correct');
+                    feedbackHTML = `<strong>Correct!</strong>`;
+                    selectedButton.style.backgroundColor = '#d4edda';
+                    selectedButton.style.borderColor = '#c3e6cb';
+                } else {
+                    feedbackAreaElement.classList.add('incorrect');
+                    feedbackHTML = `<strong>Incorrect.</strong> The correct answer was ${correctOptionLetter}.`;
+                    selectedButton.style.backgroundColor = '#f8d7da';
+                    selectedButton.style.borderColor = '#f5c6cb';
+                }
+
+                if (currentQuestion.explanation) {
+                    feedbackHTML += `<div class="explanation">${currentQuestion.explanation}</div>`;
+                }
+                feedbackAreaElement.innerHTML = feedbackHTML;
+
+                nextButtonElement.disabled = false; // Enable next/results button
+                console.log("Answer selected for question index:", currentQuestionIndex, "Next button enabled.");
+            }
+
+            function nextQuestion() {
+                currentQuestionIndex++;
+                console.log("Button clicked. Attempting to load next step. New index:", currentQuestionIndex);
+                if (currentQuestionIndex < questions.length) {
+                    console.log("Loading question for index:", currentQuestionIndex);
+                    loadQuestion();
+                } else {
+                    console.log("Last question answered. Showing results.");
+                    showResults();
+                }
+            }
+
+            function showResults() {
+                // Hide the specific quiz areas instead of the whole container
+                questionAreaElement.style.display = 'none';
+                optionsAreaElement.style.display = 'none';
+                feedbackAreaElement.style.display = 'none';
+                navigationAreaElement.style.display = 'none';
+
+                // Show the score area
+                scoreAreaElement.style.display = 'block';
+
+                // Populate the score area
+                scoreAreaElement.innerHTML = ''; // Clear previous content
+                const heading = document.createElement('h2');
+                heading.textContent = 'Quiz Complete!';
+                const scoreText = document.createElement('p');
+                scoreText.textContent = `Your final score is: ${score} out of ${questions.length} Total Marks`;
+                scoreAreaElement.appendChild(heading);
+                scoreAreaElement.appendChild(scoreText);
+
+                // Append and show the retake button (ensure it exists)
+                if (retakeButtonElement) {
+                    scoreAreaElement.appendChild(retakeButtonElement);
+                    retakeButtonElement.style.display = 'block'; // Make sure it's visible
+                } else {
+                    console.error("Retake button element not found!");
+                }
+                console.log("Results displayed. Score:", score, "/", questions.length);
+            }
+
+            function retakeQuiz() {
+                score = 0;
+                currentQuestionIndex = 0;
+                scoreAreaElement.style.display = 'none'; // Hide score area
+                // Don't need to re-show quiz-container as we didn't hide it
+                // Just need to make sure internal parts are visible again via loadQuestion
+                console.log("Retaking quiz. Resetting score and index.");
+                loadQuestion(); // This will make question/options/nav visible again
+            }
+
+            // Add event listeners
+            nextButtonElement.addEventListener('click', nextQuestion);
+            retakeButtonElement.addEventListener('click', retakeQuiz);
+
+            // Initial Load
+            console.log("Initial quiz load call.");
+            loadQuestion();
+        });
+        // --- End of DOMContentLoaded ---
+    </script>
+
+</body>
+</html>

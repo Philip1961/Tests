@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3B7 Recap Quiz</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        #quiz-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: auto;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        #question-container {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        #question-text {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .option {
+            display: block;
+            background-color: #eee;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .option:hover {
+            background-color: #ddd;
+        }
+        .option.selected {
+            font-weight: bold;
+        }
+        .option-label {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        #feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        #explanation {
+             margin-top: 10px;
+             font-style: italic;
+             color: #555;
+        }
+        button {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #score-container {
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 30px;
+        }
+        /* Highlight styles */
+        .option.highlight-correct {
+             background-color: #a3e9a4 !important; /* Light green */
+             color: #006400 !important; /* Dark green */
+             border: 1px solid #7bc87d;
+        }
+        .option.highlight-incorrect {
+            background-color: #ff9999 !important; /* Light red */
+            color: #a50000 !important; /* Dark red */
+            border: 1px solid #ff6666;
+        }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <h1>D3B7 Recap Quiz</h1>
+
+    <div id="question-area">
+        <div id="question-container">
+            <div id="question-text"></div>
+            <div id="options-container"></div>
+        </div>
+        <div id="feedback" style="display: none;"></div>
+        <div id="explanation" style="display: none;"></div>
+        <button id="next-button" onclick="nextQuestion()" disabled>Next Question</button>
+    </div>
+
+    <div id="score-container" style="display: none;">
+        <h2>Quiz Complete!</h2>
+        <p>Your score: <span id="final-score"></span> / 13</p>
+        <button id="retake-button" onclick="retakeQuiz()">Retake Quiz?</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            question: "What is the primary definition of data ethics provided in the learning materials?",
+            options: {
+                A: "The legal regulations governing data storage and transfer.",
+                B: "The moral principles guiding how organizations should collect, store, share, and use data.",
+                C: "The technical methods used to anonymize personal information.",
+                D: "A framework solely focused on preventing data breaches.",
+                E: "The study of algorithms and their societal impact only."
+            },
+            correctAnswer: "B",
+            explanation: "The materials define data ethics as 'the moral principles that guide how organizations should collect, store, share, and use data.'"
+        },
+        {
+            question: "A definition of data ethics from the National Center for Biotechnology Information was mentioned. What does it emphasize?",
+            options: {
+                A: "Maximizing profit from data usage.",
+                B: "Strict adherence to GDPR only.",
+                C: "Evaluating moral problems related to data, algorithms, and practices to find morally good solutions.",
+                D: "The technical aspects of data encryption.",
+                E: "The history of data privacy laws."
+            },
+            correctAnswer: "C",
+            explanation: "The NCBI definition cited focuses on studying and evaluating moral problems related to data, algorithms, and practices to formulate and support morally good solutions."
+        },
+         {
+            question: "Several 'Data governance criteria' were listed for consideration. Which of the following was NOT explicitly mentioned as one of these criteria?",
+            options: {
+                A: "Confidentiality",
+                B: "Accuracy / Risks or errors",
+                C: "Data Velocity",
+                D: "Provenance",
+                E: "Sensitivity and impact if released"
+            },
+            correctAnswer: "C",
+            explanation: "The listed governance criteria included Confidentiality, Sensitivity, Impact, Accuracy, Provenance, Stakeholders, Risk, Security, and Generation method. Data Velocity (part of the 'Vs' of Big Data) was not listed among these specific governance criteria."
+        },
+        {
+            question: "When discussing 'Veracity' in data, which aspect relates to whether the data is obtained directly or from another source?",
+            options: {
+                A: "Sample size",
+                B: "Bias",
+                C: "Errors, duplicates",
+                D: "Second-sourced",
+                E: "Single-data entry"
+            },
+            correctAnswer: "D",
+            explanation: "Being 'Second-sourced' was listed under Veracity, directly addressing whether the data comes from an intermediary source."
+        },
+        {
+            question: "'Emerging machine-learning problems' were introduced. What was presented as a key challenge distinct from traditional data issues?",
+            options: {
+                A: "Ensuring data accuracy.",
+                B: "Managing data storage costs.",
+                C: "The fact that analysis is increasingly done by machine learning/algorithms, not humans.",
+                D: "Getting consent for data collection.",
+                E: "Protecting data from physical theft."
+            },
+            correctAnswer: "C",
+            explanation: "A key emerging challenge highlighted is that 'An increasing amount of the data analysis used to inform decision-making is not completed by humans - it is based on machine learning and algorithms'."
+        },
+         {
+            question: "Two concepts related to machine learning ethics and regulation were contrasted. What were they?",
+            options: {
+                A: "Accuracy vs. Speed",
+                B: "Performance and testing vs. Explainability",
+                C: "Data collection vs. Data storage",
+                D: "Regulation vs. Innovation",
+                E: "Bias vs. Fairness"
+            },
+            correctAnswer: "B",
+            explanation: "'Performance and testing' was visually contrasted with 'Explainability' as key considerations in the context of machine learning challenges, data ethics, and regulation."
+        },
+        {
+            question: "The materials illustrated 6 basic principles of data processing in GDPR. Which principle involves ensuring data is relevant and limited to what is necessary?",
+            options: {
+                A: "Transparency and legitimacy",
+                B: "Purpose limitation",
+                C: "Data minimization",
+                D: "Accuracy",
+                E: "Confidentiality"
+            },
+            correctAnswer: "C",
+            explanation: "The principle of 'Data minimization' relates to collecting only data that is adequate, relevant, and limited to what is necessary for the specified purpose."
+        },
+        {
+            question: "Which GDPR principle relates to processing data lawfully, fairly, and in a transparent manner?",
+            options: {
+                A: "Purpose limitation",
+                B: "Data minimization",
+                C: "Accuracy",
+                D: "Transparency and legitimacy",
+                E: "Limitation of storage term"
+            },
+            correctAnswer: "D",
+            explanation: "The principle of 'Transparency and legitimacy' covers lawful, fair, and transparent processing."
+        },
+        {
+            question: "The costs of non-compliance with GDPR were outlined. What is the maximum potential fine mentioned?",
+            options: {
+                A: "€1 million or 1% global turnover",
+                B: "€5 million or 2% global turnover",
+                C: "€10 million or 3% global turnover",
+                D: "€20 million or 4% global turnover",
+                E: "€50 million or 5% global turnover"
+            },
+            correctAnswer: "D",
+            explanation: "The materials state 'Fines of up to €20 million or 4% global turnover' as a potential cost of non-compliance."
+        },
+        {
+            question: "Examples of GDPR breaches and remedies were provided. What breach was primarily associated with a large fine levied against Amazon?",
+            options: {
+                A: "Lack of data security leading to a hack",
+                B: "Inappropriate monitoring of employees",
+                C: "Inappropriate collection of customer data",
+                D: "Failure to provide data access to customers",
+                E: "Sharing data with unauthorized third parties"
+            },
+            correctAnswer: "C",
+            explanation: "The example given for the Amazon fine was related to 'Inappropriate collection of customer data'."
+        },
+        {
+            question: "What is the core purpose of the Open Data Institute (ODI) Data Ethics Canvas, based on its structure and content?",
+            options: {
+                A: "To generate legally binding data policies.",
+                B: "To automatically anonymize datasets.",
+                C: "To provide a structured framework for identifying, assessing, and addressing ethical issues in a data project.",
+                D: "To replace GDPR compliance checks.",
+                E: "To rank data sources by quality."
+            },
+            correctAnswer: "C",
+            explanation: "The detailed breakdown of the canvas shows it's a tool with criteria (questions) designed to prompt systematic consideration of ethical implications ('review and actions to take') throughout a data project."
+        },
+        {
+            question: "The ODI Ethics Canvas prompts consideration of who could be negatively affected. What kind of negative impacts does it suggest evaluating?",
+            options: {
+                A: "Only financial losses for the company.",
+                B: "Harm from targeting/profiling/prejudice, unfair restriction of access, or perceived harm.",
+                C: "Technical issues like server downtime.",
+                D: "Negative press coverage only.",
+                E: "Competitors gaining access to the data."
+            },
+            correctAnswer: "B",
+            explanation: "The canvas explicitly asks to consider potential negative effects such as data being used to 'target, profile, prejudice people', 'unfairly restrict access', and whether people could '*perceive* it to be harmful'."
+        },
+        {
+            question: "What was mentioned as a key takeaway regarding the practical application of the ODI Data Ethics Canvas?",
+            options: {
+                A: "It is too complex for most business users.",
+                B: "It guarantees GDPR compliance.",
+                C: "It is only useful for academic research.",
+                D: "Learners should be able to apply it to their Assignment.",
+                E: "It replaces the need for stakeholder engagement."
+            },
+            correctAnswer: "D",
+            explanation: "A key takeaway highlighted was the expectation for learners to 'Be able to apply the ODI Data Ethics Canvas to your Assignment'."
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let userAnswers = {}; // Store if an answer was selected for the current question
+
+    const questionArea = document.getElementById('question-area');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const feedback = document.getElementById('feedback');
+    const explanation = document.getElementById('explanation');
+    const nextButton = document.getElementById('next-button');
+    const scoreContainer = document.getElementById('score-container');
+    const finalScore = document.getElementById('final-score');
+
+    function loadQuestion() {
+        userAnswers[currentQuestionIndex] = false; // Reset answer flag for new question
+        feedback.style.display = 'none';
+        explanation.style.display = 'none';
+        nextButton.disabled = true;
+
+        const currentQuestion = quizData[currentQuestionIndex];
+        questionText.innerText = `Question ${currentQuestionIndex + 1}: ${currentQuestion.question}`;
+        optionsContainer.innerHTML = ''; // Clear previous options
+
+        Object.entries(currentQuestion.options).forEach(([key, value]) => {
+            const optionElement = document.createElement('div');
+            optionElement.classList.add('option');
+            optionElement.dataset.answer = key;
+            optionElement.innerHTML = `<span class="option-label">${key}.</span> ${value}`;
+            optionElement.onclick = selectAnswer;
+            optionsContainer.appendChild(optionElement);
+        });
+
+        // Update button text for the last question
+        if (currentQuestionIndex === quizData.length - 1) {
+            nextButton.innerText = 'Finish Quiz';
+        } else {
+            nextButton.innerText = 'Next Question';
+        }
+    }
+
+    function selectAnswer(event) {
+        // Prevent selecting another answer after one has been chosen for this question
+        if (userAnswers[currentQuestionIndex]) return;
+
+        const selectedOption = event.currentTarget;
+        const selectedAnswer = selectedOption.dataset.answer;
+        const currentQuestion = quizData[currentQuestionIndex];
+        const correctAnswer = currentQuestion.correctAnswer;
+
+        userAnswers[currentQuestionIndex] = true; // Mark that an answer was selected
+
+        // Disable further clicks on options
+        const allOptions = optionsContainer.querySelectorAll('.option');
+        allOptions.forEach(opt => {
+            opt.onclick = null; // Remove click handler
+            opt.style.cursor = 'default'; // Change cursor
+            opt.classList.remove('selected'); // Remove selected class if reapplied somehow
+        });
+
+         selectedOption.classList.add('selected'); // Keep selected style
+
+
+        if (selectedAnswer === correctAnswer) {
+            score++;
+            feedback.innerText = 'Correct!';
+            feedback.className = 'correct';
+            selectedOption.classList.add('highlight-correct');
+        } else {
+            feedback.innerText = `Incorrect. The correct answer was ${correctAnswer}.`;
+            feedback.className = 'incorrect';
+            selectedOption.classList.add('highlight-incorrect');
+            // Highlight the correct answer as well
+             const correctOptionElement = optionsContainer.querySelector(`.option[data-answer="${correctAnswer}"]`);
+             if(correctOptionElement) {
+                 correctOptionElement.classList.add('highlight-correct');
+             }
+        }
+
+        feedback.style.display = 'block';
+        explanation.innerText = `Explanation: ${currentQuestion.explanation}`;
+        explanation.style.display = 'block';
+        nextButton.disabled = false; // Enable the next button
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showScore();
+        }
+    }
+
+    function showScore() {
+        questionArea.style.display = 'none';
+        scoreContainer.style.display = 'block';
+        finalScore.innerText = score;
+        // Update the total score display text to reflect 13 questions
+        scoreContainer.querySelector('p').innerHTML = `Your score: <span id="final-score">${score}</span> / 13`;
+
+    }
+
+    function retakeQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        userAnswers = {};
+        scoreContainer.style.display = 'none';
+        questionArea.style.display = 'block';
+        loadQuestion();
+    }
+
+    // Initial load
+    loadQuestion();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3B Summative Assignment Orientation</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        #quiz-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        #question-container {
+            margin-bottom: 20px;
+        }
+        #question-text {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .options button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            text-align: left;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .options button:hover:not(:disabled) {
+            background-color: #e0e0e0;
+        }
+        .options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .correct {
+            background-color: #90ee90 !important; /* Light green */
+            border-color: #2e8b57 !important;
+            color: #000;
+        }
+        .incorrect {
+            background-color: #f08080 !important; /* Light coral */
+            border-color: #cd5c5c !important;
+            color: #000;
+        }
+        #feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        #feedback.correct-feedback {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        #feedback.incorrect-feedback {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        #navigation {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #navigation button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+        }
+        #navigation button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #score-container {
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        .option-label {
+            font-weight: bold;
+            margin-right: 8px;
+            display: inline-block;
+            width: 15px; /* Ensure alignment */
+        }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <h1>D3B Summative Assignment Orientation</h1>
+
+    <div id="question-container">
+        <div id="question-text"></div>
+        <div id="options" class="options"></div>
+        <div id="feedback"></div>
+    </div>
+
+    <div id="navigation">
+        <button id="next-button" disabled>Next Question</button>
+    </div>
+
+    <div id="score-container" style="display: none;">
+        <h2>Quiz Complete!</h2>
+        <p>Your final score is: <span id="final-score"></span> out of <span id="total-questions"></span></p>
+        <button id="retake-button">Retake Quiz?</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        // --- Questions 1-20 ---
+        {
+            question: "What is the wordcount limit and what happens if I exceed that limit?",
+            options: { A: "2,500 words. A 10% leeway is allowed.", B: "3,000 words. Exceeding it results in a penalty.", C: "2,500 words. Text over and above the limit will not be read or marked.", D: "2,500 words. You must submit exactly this amount.", E: "No strict limit, but conciseness is encouraged." },
+            correctAnswer: "C",
+            explanation: "The brief states the limit is 2,500 words (you can submit LESS, but not more). Standard academic practice, implied by a strict limit, is that examiners will not mark content exceeding the specified count."
+        },
+        {
+            question: "Which referencing system are you required to use?",
+            options: { A: "APA 7th Edition", B: "MLA", C: "Chicago", D: "Harvard Referencing System", E: "Any system, as long as it's consistent" },
+            correctAnswer: "D",
+            explanation: "The brief specifies: 'You are required to use only Harvard Referencing System in your submission.'"
+        },
+        {
+            question: "What is the minimum percentage required to pass this module assessment?",
+            options: { A: "40%", B: "50%", C: "60%", D: "70%", E: "Pass/Fail only, no percentage" },
+            correctAnswer: "B",
+            explanation: "The brief indicates: 'A total of 100 marks are available... and you are required to achieve minimum 50% to pass this module.'"
+        },
+        {
+            question: "For which purposes is the use of AI tools explicitly permitted in this assessment?",
+            options: { A: "Generating initial ideas and outlines", B: "Writing entire sections of the report", C: "Performing the data analysis", D: "Reviewing a draft and correcting language errors", E: "AI tools are strictly forbidden" },
+            correctAnswer: "D",
+            explanation: "Page 4 states: 'Use of AI in assessments is only allowed for the purposes of reviewing a draft, correcting language errors or if specified in the summative assessment brief.' The cover sheet also lists these options."
+        },
+        {
+            question: "What is the fictional company you are working for as a data analyst in the scenario?",
+            options: { A: "Global Insure Ltd", B: "AXA", C: "BeeSafe Insurance", D: "Zurich Insurance", E: "Aviva" },
+            correctAnswer: "C",
+            explanation: "The scenario begins: 'You have recently been employed by BeeSafe Insurance as a data analyst.'"
+        },
+        { // Amended Q6
+            question: "Which list best represents the MAIN insurance services mentioned first for BeeSafe Insurance?",
+            options: {
+                A: "Public liability, Employers' liability, Cyber",
+                B: "Professional indemnity, Contents & stock, Building",
+                C: "Only business-to-business liability insurance",
+                D: "Mainly Motor, Home, Life, Health and Travel",
+                E: "Motor, Home, Life, Health, Travel, Public liability, Employers' liability, Cyber, and others"
+            },
+            correctAnswer: "D",
+            explanation: "The brief first lists the main services on page 5 as Motor, Home, Life, Health, and Travel, before detailing other business insurance categories on page 7."
+        },
+         {
+            question: "Which three international subsidiaries of BeeSafe Insurance are you asked to analyse?",
+            options: { A: "UK, USA, Canada", B: "France, Germany, Spain", C: "Brazil, Australia, Norway", D: "India, China, Japan", E: "South Africa, Egypt, Nigeria" },
+            correctAnswer: "C",
+            explanation: "Page 6 clearly states: 'Your job will be to analyse the performance of three of the best international subsidiaries of BeeSafe Insurance: Brazil, Australia and Norway.'"
+        },
+        {
+            question: "What are the two primary Key Performance Indicators (KPIs) the Underwriting Director wants you to analyse across the subsidiaries for the initial comparison?",
+            options: { A: "Customer complaints and claim resolution time", B: "Revenue (written premiums) and retention volume", C: "Marketing spend and new customer acquisition rate", D: "Employee satisfaction and operational costs", E: "Website traffic and social media engagement" },
+            correctAnswer: "B",
+            explanation: "The first research objective (page 6) asks you to analyse revenue (written premiums) and retention volume (client renewals). These serve as the key KPIs for evaluating subsidiary performance in this task."
+        },
+        {
+            question: "Which specific technological implementation's impact in Brazil (in 2023) needs to be assessed?",
+            options: { A: "A new CRM system", B: "An AI chatbot", C: "A mobile application", D: "An upgraded data warehouse", E: "A digital marketing campaign" },
+            correctAnswer: "B",
+            explanation: "Page 7 describes the implementation of an AI chatbot in Brazil starting July 2023 and asks: 'Did the implementation in 2023 of the AI chatbot in Brazil have a positive impact on revenue...?'"
+        },
+        {
+            question: "Which section of the report focuses on discussing data quality issues and the steps taken to address them?",
+            options: { A: "Section 1: Introduction and project plan", B: "Section 2: Data quality issues and remedies / Data analysis and commentary", C: "Section 3: Data charting and commentary", D: "Section 4: Conclusions and recommendations", E: "Section 7: Appendix" },
+            correctAnswer: "B",
+            explanation: "Page 8 outlines the Report Sections. Section 2a is explicitly titled 'Data quality issues and remedies'."
+        },
+        {
+             question: "In Section 3 (Data charting and commentary), what is the minimum number of charts you should use?",
+             options: { A: "At least 1 chart", B: "At least 2 charts", C: "At least 3 charts", D: "At least 5 charts", E: "There is no minimum requirement" },
+             correctAnswer: "C",
+             explanation: "Page 9 states for Section 3: '...you should perform your analysis using at least 3 charts...'"
+        },
+        {
+            question: "According to the guidelines, what should you do after pasting a table or chart into your report?",
+            options: { A: "Only provide the table/chart number and title", B: "Briefly mention it in the main text", C: "Provide a detailed statistical analysis below it", D: "Include an explanation of its contents and a bullet-point list of inferences", E: "Reference the source of the data used in the table/chart" },
+            correctAnswer: "D",
+            explanation: "Guidelines for both Section 2 (Tables) and Section 3 (Charts) specify including an explanation of the table/chart and its contents, followed by a bullet-point list of what you can see or infer."
+        },
+        // Removed original Q13 about LO1
+        {
+            question: "What elements are EXCLUDED from the final word count?",
+            options: { A: "Introduction and Conclusions", B: "Data analysis commentary", C: "Executive Summary", D: "Cover Page, Table of Contents, References, Appendices, Tables, Charts and Figures", E: "Only the References and Appendices" },
+            correctAnswer: "D",
+            explanation: "Page 12 clearly states: 'Word count: 2,500. Cover Page, Table of Contents, References, Appendices, Tables, Charts and Figures do not count towards word count.'"
+        },
+        {
+            question: "What is the required structure for the report headings?",
+            options: { A: "Create your own logical structure", B: "Follow the structure provided in Section 3 - Report Structure exactly", C: "Use the Learning Outcomes as main headings", D: "Follow the structure of the Marking Guide", E: "A standard business report format (Exec Summary, Intro, Body, Conclusion)" },
+            correctAnswer: "B",
+            explanation: "Page 12 explicitly states: 'You should set out your report according to the following heading structure... But you must use this overall structure... You will be deducted marks if you do not follow this structure.'"
+        },
+        // --- Questions related to yellow highlighted tasks ---
+        {
+            question: "The first primary analysis task requires comparing the three subsidiaries (Brazil, Australia, Norway). What specific metrics should be analysed for this comparison, and what is the goal?",
+            options: { A: "Analyse revenue (written premiums) and retention volume to identify the best country for expansion.", B: "Analyse customer complaints and claim processing times to improve customer service.", C: "Analyse marketing spend and website traffic to optimize digital campaigns.", D: "Analyse employee turnover and training costs to assess subsidiary management.", E: "Analyse only revenue to determine the most profitable subsidiary overall." },
+            correctAnswer: "A",
+            explanation: "The brief on page 6 explicitly asks to analyse revenue (written premiums) and retention volume to identify the best country for an expansion strategy."
+        },
+        { // Amended Q18 (was 17)
+            question: "The Marketing Manager wants to focus promotion efforts on high-performance insurance products. What analysis are you asked to perform to support this?",
+            options: {
+                A: "Analyse the demographics of customers for each product category.",
+                B: "Analyse the profitability of each subsidiary as a whole.",
+                C: "Analyse the performance of different business insurance categories across the subsidiaries, comparing them against each other to identify the best performing ones.",
+                D: "Analyse the effectiveness of the AI chatbot for each product category.",
+                E: "Analyse the renewal rates only for the top three product categories."
+            },
+            correctAnswer: "C",
+            explanation: "The brief on page 7 asks to perform an analysis of the business insurance categories to identify those with the best performance (implying comparison) across the subsidiaries."
+        },
+        {
+            question: "Regarding the AI chatbot implemented in Brazil during 2023, what specific question needs to be answered through data analysis?",
+            options: { A: "How much did the AI chatbot cost to implement?", B: "Did customer satisfaction scores increase in Brazil after the chatbot implementation?", C: "Which insurance category benefited most from the AI chatbot?", D: "Should the AI chatbot be rolled out to Australia and Norway immediately?", E: "Did the AI chatbot have a positive impact on the revenue (written premiums) of the Brazil subsidiary?" },
+            correctAnswer: "E",
+            explanation: "The brief on page 7 poses the specific question: 'Did the implementation in 2023 of the AI chatbot in Brazil have a positive impact on revenue (written premiums) of the subsidiary?'"
+        },
+        // --- Conceptual Insurance Questions ---
+        {
+            question: "Based on general insurance principles, what combination of factors is most likely to contribute significantly to NEW business growth?",
+            options: { A: "High renewal discounts and existing customer loyalty programs.", B: "Strict underwriting rules and slow claims processing.", C: "Competitive pricing, effective marketing, new product offerings, and efficient onboarding.", D: "Focusing solely on reducing operational costs.", E: "Increasing the complexity of policy documents." },
+            correctAnswer: "C",
+            explanation: "New growth comes from attracting new customers through competitive offers (pricing, products), making them aware (marketing), and making it easy to sign up (efficiency, onboarding)."
+        },
+        {
+            question: "What factors generally contribute most to higher business RETENTION (customers renewing their policies) in the insurance market?",
+            options: { A: "Aggressive advertising campaigns targeting competitors' customers.", B: "Frequent changes in policy terms and conditions.", C: "Simplifying the process for cancelling policies.", D: "Positive claims experience, perceived value for money, good customer service, and relevant communication.", E: "Offering the absolute lowest premium price regardless of service quality." },
+            correctAnswer: "D",
+            explanation: "Retention relies on keeping existing customers satisfied through good service (especially during claims), fair pricing/value, and demonstrating ongoing relevance."
+        },
+        {
+            question: "Why is there often an inherent tension between the goals of Marketing/Underwriting departments and the Claims department in an insurance company, as hinted at in the brief?",
+            options: { A: "Marketing wants complex products, while Claims prefers simple ones.", B: "Marketing/Underwriting are measured on premium income (revenue), while Claims is measured on minimizing claim payouts (costs).", C: "Claims departments typically have larger budgets than Marketing.", D: "Underwriting focuses on long-term risk, while Claims focuses on short-term payouts.", E: "Marketing uses external data, while Claims relies only on internal data." },
+            correctAnswer: "B",
+            explanation: "The brief (page 6) highlights this core conflict: Marketing/Underwriting aim to maximize revenue by signing up customers (collecting premiums), whereas Claims aims to minimize expenditure by paying out as little as necessary (within policy terms) when claims occur."
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let answerSelected = false;
+
+    const questionTextElement = document.getElementById('question-text');
+    const optionsElement = document.getElementById('options');
+    const feedbackElement = document.getElementById('feedback');
+    const nextButton = document.getElementById('next-button');
+    const scoreContainer = document.getElementById('score-container');
+    const questionContainer = document.getElementById('question-container');
+    const navigationElement = document.getElementById('navigation');
+    const finalScoreElement = document.getElementById('final-score');
+    const totalQuestionsElement = document.getElementById('total-questions');
+    const retakeButton = document.getElementById('retake-button');
+
+    function loadQuestion() {
+        answerSelected = false;
+        feedbackElement.innerHTML = '';
+        feedbackElement.className = 'feedback'; // Reset feedback class
+        const currentQuestion = questions[currentQuestionIndex];
+        // Ensure question number updates correctly
+        questionTextElement.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+        optionsElement.innerHTML = '';
+
+        // Add options A-E
+        const optionKeys = Object.keys(currentQuestion.options); // ['A', 'B', 'C', 'D', 'E']
+        optionKeys.forEach(key => {
+            const button = document.createElement('button');
+            button.innerHTML = `<span class="option-label">${key}.</span> ${currentQuestion.options[key]}`;
+            button.onclick = () => selectAnswer(button, key);
+            optionsElement.appendChild(button);
+        });
+
+        nextButton.disabled = true;
+    }
+
+    function selectAnswer(button, selectedOption) {
+        if (answerSelected) return; // Prevent changing answer
+        answerSelected = true;
+
+        const currentQuestion = questions[currentQuestionIndex];
+        const correctOption = currentQuestion.correctAnswer;
+
+        // Disable all buttons
+        const buttons = optionsElement.getElementsByTagName('button');
+        for (let btn of buttons) {
+            btn.disabled = true;
+        }
+
+        // Highlight selection and correct answer
+        if (selectedOption === correctOption) {
+            score++;
+            button.classList.add('correct');
+            feedbackElement.innerHTML = `<strong>Correct!</strong> ${currentQuestion.explanation}`;
+            feedbackElement.className = 'feedback correct-feedback';
+        } else {
+            button.classList.add('incorrect');
+            feedbackElement.innerHTML = `<strong>Incorrect.</strong> The correct answer was ${correctOption}.<br>${currentQuestion.explanation}`;
+            feedbackElement.className = 'feedback incorrect-feedback';
+            // Also highlight the correct button
+             const correctButton = Array.from(buttons).find(btn => btn.innerHTML.includes(`<span class="option-label">${correctOption}.</span>`));
+             if(correctButton) correctButton.classList.add('correct');
+        }
+
+        nextButton.disabled = false;
+    }
+
+    function showNextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        questionContainer.style.display = 'none';
+        navigationElement.style.display = 'none';
+        scoreContainer.style.display = 'block';
+        finalScoreElement.innerText = score;
+        totalQuestionsElement.innerText = questions.length;
+    }
+
+    function retakeQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        scoreContainer.style.display = 'none';
+        questionContainer.style.display = 'block';
+        navigationElement.style.display = 'block';
+        loadQuestion();
+    }
+
+    nextButton.addEventListener('click', showNextQuestion);
+    retakeButton.addEventListener('click', retakeQuiz);
+
+    // Initial load
+    loadQuestion();
+
+</script>
+
+</body>
+</html>

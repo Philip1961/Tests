@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDA4 Recap Quiz</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+            background-color: #f4f7f9;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+        #quiz-container, #results-container, #review-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 650px;
+            margin-bottom: 20px;
+        }
+        .question-container, #review-question-display {
+            margin-bottom: 20px;
+        }
+        /* Control visibility via 'active' class */
+        #quiz-container:not(.active),
+        #results-container:not(.active),
+        #review-container:not(.active) {
+             display: none;
+        }
+         #quiz-container.active,
+         #results-container.active,
+         #review-container.active {
+              display: block;
+         }
+
+         /* Hide individual questions unless they are active */
+        .question-container:not(.active) {
+            display: none;
+        }
+        .question-container.active {
+            display: block;
+        }
+
+        .question-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .options-container .option {
+            display: block;
+            width: calc(100% - 24px); /* Full width minus padding */
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            text-align: left;
+            background-color: #f9f9f9;
+            font-size: 1em;
+        }
+        .options-container .option:hover:not(.disabled) {
+            background-color: #e9e9e9;
+        }
+        .options-container .option.correct {
+            background-color: #d4edda !important; /* Light green */
+            border-color: #c3e6cb !important;
+            color: #155724 !important; /* Dark green */
+            font-weight: bold;
+        }
+        .options-container .option.incorrect {
+            background-color: #f8d7da !important; /* Light red */
+            border-color: #f5c6cb !important;
+            color: #721c24 !important; /* Dark red */
+            font-weight: bold;
+        }
+        .options-container .option.user-selected {
+             border-width: 2px;
+             border-color: #888; /* Indicate user's choice in review */
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.95em;
+            display: none; /* Hidden initially */
+            border-left: 5px solid transparent;
+        }
+        .explanation.correct {
+            background-color: #e2f0e5;
+            color: #155724;
+            border-left-color: #28a745;
+            display: block;
+        }
+        .explanation.incorrect {
+             background-color: #fdedee;
+             color: #721c24;
+             border-left-color: #dc3545;
+             display: block;
+        }
+        #navigation-buttons, #review-navigation {
+            margin-top: 25px;
+            display: flex; /* Use flexbox for alignment */
+            justify-content: flex-end; /* Align buttons to the right */
+            align-items: center; /* Vertically center items */
+        }
+         #review-navigation {
+             justify-content: space-between; /* Space out review buttons */
+         }
+        #next-btn, #retake-btn, #review-prev-btn, #review-next-btn {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-left: 10px; /* Spacing between buttons */
+        }
+        #review-prev-btn, #review-next-btn {
+            font-size: 1.5em; /* Make arrows bigger */
+            padding: 5px 15px;
+        }
+        #next-btn:hover, #retake-btn:hover, #review-prev-btn:hover, #review-next-btn:hover {
+            background-color: #0056b3;
+        }
+         #next-btn {
+             display: none; /* Hidden initially */
+         }
+        #results-container {
+            text-align: center;
+            padding: 20px;
+            /* Initially hidden via class */
+        }
+        #results-container h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        #score {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 25px;
+        }
+        .option-prefix {
+            font-weight: bold;
+            margin-right: 8px;
+            display: inline-block;
+            width: 15px;
+        }
+        /* Prevent selection after answer */
+        .options-container.disabled .option {
+            cursor: default;
+            pointer-events: none; /* Disable further clicks */
+             opacity: 0.9;
+        }
+         .options-container.disabled .option:hover {
+             /* No hover effect when disabled, except for feedback colors */
+             background-color: #f9f9f9;
+         }
+        .options-container.disabled .option.correct,
+        .options-container.disabled .option.incorrect {
+            opacity: 1; /* Keep feedback visible */
+        }
+         .options-container.disabled .option.correct:hover {
+             background-color: #d4edda !important;
+         }
+         .options-container.disabled .option.incorrect:hover {
+             background-color: #f8d7da !important;
+         }
+
+        /* Review Specific Styles */
+        #review-status {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        /* Hidden template */
+        #question-template {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Main Quiz Container -->
+    <div id="quiz-container" class="active"> <!-- Start active -->
+        <h1>PDA4 Recap Quiz</h1>
+        <div id="question-area">
+             <!-- Active question will be appended here -->
+        </div>
+        <div id="navigation-buttons">
+             <button id="next-btn" onclick="nextQuestion()">Next Question</button>
+        </div>
+    </div>
+
+    <!-- Results Container -->
+     <div id="results-container" class="inactive"> <!-- Start inactive -->
+         <h2>Quiz Complete!</h2>
+         <p id="score">Your score: 0 / 15</p>
+         <button id="retake-btn" onclick="retakeQuiz()">Retake Quiz?</button>
+     </div>
+
+    <!-- Review Section Container -->
+    <div id="review-container" class="inactive"> <!-- Start inactive -->
+        <h2>Review Answers</h2>
+        <div id="review-status">Question 1 / 15</div>
+        <div id="review-question-display">
+             <p class="question-text">Review Question Text</p>
+             <div class="options-container disabled">
+                 <!-- Review options will be added here -->
+             </div>
+             <div class="explanation">Review Explanation</div>
+        </div>
+        <div id="review-navigation">
+            <button id="review-prev-btn" onclick="reviewQuestion('prev')">&larr;</button>
+            <button id="review-next-btn" onclick="reviewQuestion('next')">&rarr;</button>
+        </div>
+    </div>
+
+    <!-- Hidden Template for Questions -->
+    <div id="question-template">
+        <div class="question-container"> <!-- Base structure, no active class here -->
+            <p class="question-text">Question Text Placeholder</p>
+            <div class="options-container">
+                <!-- Options will be added here -->
+            </div>
+            <div class="explanation">Explanation Placeholder</div>
+        </div>
+    </div>
+
+
+    <script>
+        const questions = [
+            // ... (Keep the same questions array as before) ...
+             { // Q1
+                question: "What is a primary capability provided by the NumPy library for Python?",
+                options: ["Building graphical user interfaces", "Performing high-performance scientific computing and data analysis", "Managing web server requests", "Creating interactive web pages", "Parsing text documents"],
+                correctAnswer: 1,
+                explanation: "NumPy is described as the fundamental package for high-performance scientific computing and data analysis, providing multidimensional arrays and tools.",
+                userSelection: null
+            },
+            { // Q2
+                question: "What alias is conventionally used when importing the NumPy library to shorten function calls?",
+                options: ["num", "npy", "py", "np", "numpy"],
+                correctAnswer: 3,
+                explanation: "The common practice shown is `import numpy as np`, using 'np' as a shorter alias for the module.",
+                userSelection: null
+            },
+            { // Q3
+                question: "What typically happens when you create a NumPy array using a list containing mixed data types like numbers and strings?",
+                options: ["It raises a ValueError.", "It stores each item with its original type.", "All elements are converted to a common, more general type (often string).", "Only the numeric elements are included in the array.", "It creates a list of tuples, each containing the value and its type."],
+                correctAnswer: 2,
+                explanation: "If an array is created with mixed types, NumPy converts all elements to a single compatible type, such as the Unicode string type ('<U32') shown in an example.",
+                userSelection: null
+            },
+             { // Q4
+                question: "If `arr = np.array([2, 4, 6])`, what is the result of the operation `arr / 2`?",
+                options: ["`[2, 4, 6, 2, 4, 6]`", "`[4, 16, 36]`", "`[1., 2., 3.]`", "A TypeError", "`[1, 2, 3]` (as integers)"],
+                correctAnswer: 2,
+                explanation: "Arithmetic operations on NumPy arrays are performed element-wise. Each element in `arr` is divided by 2, resulting in floating-point numbers.",
+                userSelection: null
+            },
+             { // Q5
+                question: "For a 2D NumPy array `a2`, how would you access the element located at the first row (index 0) and the second column (index 1)?",
+                options: ["`a2[1][0]`", "`a2(0, 1)`", "`a2[0, 1]`", "`a2.get(0, 1)`", "`a2{0}{1}`"],
+                correctAnswer: 2,
+                explanation: "Accessing elements in a 2D NumPy array uses the format `array[row_index, column_index]`. So, the first row (0) and second column (1) is `a2[0, 1]`.",
+                userSelection: null
+            },
+             { // Q6
+                question: "Which NumPy function is used to create an array containing a sequence of numbers starting from 0 up to (but not including) a specified stop value, with a default step of 1?",
+                options: ["`np.linspace()`", "`np.zeros()`", "`np.full()`", "`np.arange()`", "`np.array()`"],
+                correctAnswer: 3,
+                explanation: "`np.arange(stop)` or `np.arange(start, stop, step)` generates sequences of numbers. `np.arange(11)` creates numbers from 0 to 10.",
+                userSelection: null
+            },
+            { // Q7
+                question: "What does the function call `np.eye(3)` produce?",
+                options: ["An array `[1., 1., 1.]`", "A 3x3 array filled with the value 1.", "A 3x3 identity array (ones on the diagonal, zeros elsewhere).", "An array containing three zeros `[0., 0., 0.]`.", "An array `[3., 3., 3.]`"],
+                correctAnswer: 2,
+                explanation: "`np.eye(N)` creates an N x N identity array, which has ones on the main diagonal and zeros everywhere else.",
+                userSelection: null
+            },
+            { // Q8
+                question: "The function `np.linspace(0, 10, 5)` creates an array. What does this array represent?",
+                 options: ["Integers from 0 to 10, with a step of 5.", "Five random numbers between 0 and 10.", "Five evenly spaced numbers starting at 0 and ending at 10.", "The numbers `[0., 10., 5.]`.", "A 10x5 array filled with zeros."],
+                correctAnswer: 2,
+                explanation: "`np.linspace(start, stop, num)` generates `num` evenly spaced values over the interval [`start`, `stop`], including both endpoints.",
+                userSelection: null
+            },
+             { // Q9
+                question: "What key difference is highlighted between performing an operation like `** 2` on a NumPy array versus a standard Python list?",
+                options: ["Python lists handle exponentiation faster.", "NumPy performs the operation element-wise, while lists might cause an error or concatenate.", "Only lists can store the results of exponentiation.", "NumPy arrays require a loop for such operations.", "Lists automatically convert results to strings."],
+                correctAnswer: 1,
+                explanation: "An example demonstrates that `my_list ** 2` raises a TypeError, whereas `np_array ** 2` successfully computes the square of each element individually (element-wise operation).",
+                userSelection: null
+            },
+            { // Q10
+                question: "Which NumPy function is specifically designed to create an array filled entirely with zeros, given a specific shape?",
+                options: ["`np.empty()`", "`np.zeros()`", "`np.null()`", "`np.eye()`", "`np.arange()`"],
+                correctAnswer: 1,
+                explanation: "`np.zeros(shape)` creates an array of the specified shape, filled with floating-point zeros.",
+                userSelection: null
+            },
+            { // Q11
+                 question: "What information does the `.shape` attribute provide about a NumPy array?",
+                 options: ["The data type of the array elements.", "The total number of elements.", "A tuple indicating the size of the array in each dimension.", "The memory location of the array.", "The sum of all elements."],
+                 correctAnswer: 2,
+                explanation: "The `.shape` attribute returns a tuple representing the array's dimensions. For a 1D array of length 4, it's `(4,)`; for a 2x3 array, it's `(2, 3)`.",
+                 userSelection: null
+            },
+             { // Q12
+                 question: "If `data = np.array([5, 15, 25, 35])`, what is the output of the boolean expression `data < 20`?",
+                 options: ["`[5, 15]`", "`[True, True, False, False]`", "`False`", "A ValueError", "`[25, 35]`"],
+                 correctAnswer: 1,
+                explanation: "Comparisons involving NumPy arrays are applied element-wise, resulting in a boolean array where each element corresponds to the comparison result for the original element.",
+                 userSelection: null
+            },
+            { // Q13
+                 question: "NumPy serves as a foundational library for which other commonly used data analysis libraries?",
+                 options: ["Requests and Beautiful Soup", "Tkinter and PyQT", "Flask and Django", "Pandas and Scikit-Learn (Sci-Kit Learn)", "Pygame and Kivy"],
+                 correctAnswer: 3,
+                explanation: "It's mentioned that powerful modules like Pandas and Sci-Kit Learn are built upon NumPy, leveraging its array structures and numerical capabilities.",
+                 userSelection: null
+            },
+             { // Q14
+                 question: "How does the `+` operator behave when used between two NumPy arrays of the same dimensions?",
+                 options: ["It concatenates the arrays end-to-end.", "It performs element-wise addition.", "It computes the matrix multiplication (dot product).", "It selects elements present in both arrays.", "It raises an `UnsupportedOperationError`."],
+                 correctAnswer: 1,
+                explanation: "Unlike list concatenation, using `+` with two NumPy arrays results in element-wise addition, where corresponding elements from both arrays are added together.",
+                 userSelection: null
+            },
+             { // Q15
+                 question: "Which function or method allows you to change the shape (dimensions) of a NumPy array without altering its underlying data elements?",
+                 options: ["`np.transpose()`", "`np.flatten()`", "`np.sort()`", "`np.reshape()`", "`np.resize()`"],
+                 correctAnswer: 3,
+                explanation: "The `.reshape()` method (or `np.reshape()` function) is used to give an array a new shape, provided the total number of elements remains constant.",
+                 userSelection: null
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let reviewIndex = 0;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function displayQuestion(index) {
+             const questionArea = document.getElementById('question-area');
+             questionArea.innerHTML = ''; // Clear previous question if any
+             if (index >= questions.length) return; // Should not happen in normal flow
+
+             const questionData = questions[index];
+
+             // Clone template's inner question container
+             const questionTemplate = document.getElementById('question-template').firstElementChild; // Get the .question-container div
+             const questionContainer = questionTemplate.cloneNode(true);
+             questionContainer.id = `question-${index}`;
+             questionContainer.classList.add('active'); // *** CORRECTED LINE *** Make it visible using class
+
+             questionContainer.querySelector('.question-text').textContent = `${index + 1}. ${questionData.question}`;
+             const optionsContainer = questionContainer.querySelector('.options-container');
+             optionsContainer.innerHTML = ''; // Clear template options
+
+             const optionLabels = ['A', 'B', 'C', 'D', 'E'];
+             let shuffledOptions = questionData.options.map((option, originalIndex) => ({ text: option, originalIndex: originalIndex }));
+             shuffleArray(shuffledOptions);
+             questionData.shuffledMap = shuffledOptions.map(opt => opt.originalIndex);
+
+             shuffledOptions.forEach((optionData, i) => {
+                const button = document.createElement('button');
+                button.className = 'option';
+                button.onclick = () => checkAnswer(optionData.originalIndex, index);
+                button.innerHTML = `<span class="option-prefix">${optionLabels[i]}</span> ${optionData.text}`;
+                optionsContainer.appendChild(button);
+             });
+
+             questionContainer.querySelector('.explanation').style.display = 'none';
+             questionArea.appendChild(questionContainer); // Add the prepared question to the visible area
+             document.getElementById('next-btn').style.display = 'none';
+        }
+
+        function checkAnswer(selectedOriginalIndex, questionIndex) {
+            const questionData = questions[questionIndex];
+            questionData.userSelection = selectedOriginalIndex;
+            const isCorrect = selectedOriginalIndex === questionData.correctAnswer;
+
+            const questionContainer = document.getElementById(`question-${questionIndex}`);
+            const optionsContainer = questionContainer.querySelector('.options-container');
+            optionsContainer.classList.add('disabled');
+
+            const optionButtons = optionsContainer.querySelectorAll('.option');
+            const shuffledMap = questionData.shuffledMap;
+
+            const selectedButtonIndex = shuffledMap.findIndex(origIdx => origIdx === selectedOriginalIndex);
+            const correctButtonIndex = shuffledMap.findIndex(origIdx => origIdx === questionData.correctAnswer);
+
+            if (isCorrect) {
+                score++;
+                optionButtons[selectedButtonIndex].classList.add('correct');
+                questionContainer.querySelector('.explanation').textContent = "Correct! " + questionData.explanation;
+                questionContainer.querySelector('.explanation').className = 'explanation correct';
+            } else {
+                optionButtons[selectedButtonIndex].classList.add('incorrect');
+                if (correctButtonIndex !== -1) { // Ensure correct answer exists
+                   optionButtons[correctButtonIndex].classList.add('correct');
+                }
+                questionContainer.querySelector('.explanation').textContent = "Incorrect. " + questionData.explanation;
+                questionContainer.querySelector('.explanation').className = 'explanation incorrect';
+            }
+
+            // Show next/results button
+            const nextButton = document.getElementById('next-btn');
+            nextButton.style.display = 'inline-block';
+            if (currentQuestionIndex < questions.length - 1) {
+                nextButton.textContent = 'Next Question';
+            } else {
+                nextButton.textContent = 'Show Results';
+            }
+        }
+
+        function nextQuestion() {
+             // Optionally hide the current question before showing the next
+             // const currentQuestionContainer = document.getElementById(`question-${currentQuestionIndex}`);
+             // if(currentQuestionContainer) currentQuestionContainer.classList.remove('active');
+
+             currentQuestionIndex++;
+             if (currentQuestionIndex < questions.length) {
+                displayQuestion(currentQuestionIndex);
+             } else {
+                 showResults();
+             }
+        }
+
+        function showResults() {
+             document.getElementById('quiz-container').classList.remove('active'); // Hide quiz
+             document.getElementById('quiz-container').classList.add('inactive'); // Explicitly inactive
+             const resultsContainer = document.getElementById('results-container');
+             document.getElementById('score').textContent = `Your score: ${score} / ${questions.length}`;
+             resultsContainer.classList.remove('inactive');
+             resultsContainer.classList.add('active'); // Show results
+
+             // Activate and show review section
+             const reviewContainer = document.getElementById('review-container');
+             reviewContainer.classList.remove('inactive');
+             reviewContainer.classList.add('active');
+             reviewIndex = 0;
+             displayReview(reviewIndex);
+        }
+
+        function displayReview(index) {
+            if (index < 0 || index >= questions.length) return; // Boundary check
+
+            const questionData = questions[index];
+            const reviewDisplay = document.getElementById('review-question-display');
+            reviewDisplay.querySelector('.question-text').textContent = `${index + 1}. ${questionData.question}`;
+
+            const optionsContainer = reviewDisplay.querySelector('.options-container');
+            optionsContainer.innerHTML = ''; // Clear previous options
+
+            const optionLabels = ['A', 'B', 'C', 'D', 'E'];
+            questionData.options.forEach((optionText, i) => {
+                const button = document.createElement('button');
+                button.className = 'option disabled'; // Non-interactive
+                button.innerHTML = `<span class="option-prefix">${optionLabels[i]}</span> ${optionText}`;
+
+                if (i === questionData.correctAnswer) {
+                    button.classList.add('correct');
+                }
+                // Check if userSelection is not null before comparing
+                if (questionData.userSelection !== null && i === questionData.userSelection) {
+                    button.classList.add('user-selected');
+                    if (i !== questionData.correctAnswer) {
+                        button.classList.add('incorrect');
+                    }
+                }
+                optionsContainer.appendChild(button);
+            });
+
+            const explanationDiv = reviewDisplay.querySelector('.explanation');
+            explanationDiv.textContent = questionData.explanation;
+            // Check if userSelection is not null for explanation class
+            if (questionData.userSelection !== null && questionData.userSelection === questionData.correctAnswer) {
+                explanationDiv.className = 'explanation correct';
+            } else {
+                // Show incorrect explanation if user selected wrong or didn't select (null)
+                 explanationDiv.className = 'explanation incorrect';
+            }
+             explanationDiv.style.display = 'block'; // Ensure explanation is visible in review
+
+            document.getElementById('review-status').textContent = `Question ${index + 1} / ${questions.length}`;
+            document.getElementById('review-prev-btn').disabled = (index === 0);
+            document.getElementById('review-next-btn').disabled = (index === questions.length - 1);
+        }
+
+        function reviewQuestion(direction) {
+            if (direction === 'prev' && reviewIndex > 0) {
+                reviewIndex--;
+            } else if (direction === 'next' && reviewIndex < questions.length - 1) {
+                reviewIndex++;
+            }
+            displayReview(reviewIndex);
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            reviewIndex = 0;
+            questions.forEach(q => {
+                q.userSelection = null; // Reset selections
+                delete q.shuffledMap; // Clear shuffle map if needed
+            });
+
+            document.getElementById('results-container').classList.remove('active');
+            document.getElementById('results-container').classList.add('inactive');
+            document.getElementById('review-container').classList.remove('active');
+            document.getElementById('review-container').classList.add('inactive');
+
+            const quizContainer = document.getElementById('quiz-container');
+            quizContainer.classList.remove('inactive');
+            quizContainer.classList.add('active'); // Show quiz container
+
+            displayQuestion(0); // Display the first question
+        }
+
+        // Initial Setup
+        window.onload = () => {
+            // Ensure containers start in correct state (CSS handles initial state now)
+             // shuffleArray(questions); // Optional: Shuffle question order if desired
+            displayQuestion(0); // Display the first question
+        };
+
+    </script>
+
+</body>
+</html>

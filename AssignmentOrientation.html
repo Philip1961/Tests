@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summative Assignment Orientation Exercise</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .quiz-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 700px;
+            text-align: left;
+        }
+        h1 {
+            color: #B5006C; /* BPP Purple */
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+        .options-list li {
+            background-color: #eee;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .options-list li:hover {
+            background-color: #ddd;
+        }
+        .options-list li.selected {
+            font-weight: bold;
+        }
+        .options-list li.correct {
+            background-color: #d4edda; /* Light green */
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .options-list li.incorrect {
+            background-color: #f8d7da; /* Light red */
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .feedback.correct-feedback {
+            background-color: #e9f7ef;
+            color: #155724;
+        }
+        .feedback.incorrect-feedback {
+            background-color: #fdedee;
+            color: #721c24;
+        }
+        .button-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        button {
+            background-color: #B5006C; /* BPP Purple */
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #8a0052; /* Darker BPP Purple */
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .score-container, .review-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .score-container h2, .review-container h2 {
+            color: #B5006C;
+        }
+        .navigation-buttons button {
+            background-color: #555;
+        }
+        .navigation-buttons button:hover {
+            background-color: #333;
+        }
+        .option-label {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Summative Assignment Orientation Exercise</h1>
+        <div id="question-area">
+            <p class="question-text" id="question"></p>
+            <ul class="options-list" id="options"></ul>
+            <div id="feedback-area"></div>
+            <div class="button-container">
+                <button id="next-btn">Next Question</button>
+            </div>
+        </div>
+        <div id="score-area" class="score-container" style="display: none;">
+            <h2>Quiz Complete!</h2>
+            <p id="score"></p>
+            <div class="navigation-buttons">
+                <button id="backward-btn" style="display: none;">&larr; Previous</button>
+                <button id="forward-btn" style="display: none;">Next &rarr;</button>
+            </div>
+            <button id="retake-btn">Retake Quiz?</button>
+            <button id="review-btn">Review Answers</button>
+        </div>
+        <div id="review-area" class="review-container" style="display: none;">
+             <h2>Review Your Answers</h2>
+             <div id="review-question-area">
+                <p class="question-text" id="review-question"></p>
+                <ul class="options-list" id="review-options"></ul>
+                <div id="review-feedback-area"></div>
+            </div>
+            <div class="navigation-buttons">
+                <button id="review-backward-btn">&larr; Previous</button>
+                <button id="review-forward-btn">Next &rarr;</button>
+            </div>
+             <button id="finish-review-btn">Finish Review</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "1. According to the BPP Coursework Cover Sheet, if you use AI tools for reviewing a draft, what must you do?",
+                options: [
+                    { text: "A. Only mention it if the AI wrote more than 10% of the content.", correct: false },
+                    { text: "B. Declare the AI tool usage and highlight the reason on the cover sheet.", correct: true },
+                    { text: "C. Get prior permission from the module leader.", correct: false },
+                    { text: "D. AI tools are strictly forbidden for any purpose.", correct: false },
+                    { text: "E. Attach a separate report detailing all AI interactions.", correct: false }
+                ],
+                explanation: "Page 1 states: 'I declare that where I have used any AI tools, it was for the following reasons (highlight as appropriate): To review a draft / To correct language errors / Other (please describe)'. Page 4 also mentions indicating AI use on the Assignment Cover sheet."
+            },
+            {
+                question: "2. What is the specified word limit for the coursework submission (excluding certain sections)?",
+                options: [
+                    { text: "A. Exactly 2,500 words.", correct: false },
+                    { text: "B. A minimum of 2,500 words.", correct: false },
+                    { text: "C. LESS than 2,500 words but not more.", correct: true },
+                    { text: "D. 2,500 words +/- 10%.", correct: false },
+                    { text: "E. There is no strict word limit, only a guideline.", correct: false }
+                ],
+                explanation: "Page 4 states: 'For coursework, the submission word limit is 2,500 words. You must comply with the word count guidelines. You may submit LESS than 2,500 words but not more.'"
+            },
+            {
+                question: "3. Which referencing system are you required to use for your submission?",
+                options: [
+                    { text: "A. APA 7th Edition", correct: false },
+                    { text: "B. MLA", correct: false },
+                    { text: "C. Chicago", correct: false },
+                    { text: "D. Only Harvard Referencing System", correct: true },
+                    { text: "E. Any recognized academic referencing system.", correct: false }
+                ],
+                explanation: "Page 4 clearly states: 'You are required to use only Harvard Referencing System in your submission.'"
+            },
+            {
+                question: "4. What is the minimum percentage required to pass this module assessment?",
+                options: [
+                    { text: "A. 40%", correct: false },
+                    { text: "B. 50%", correct: true },
+                    { text: "C. 60%", correct: false },
+                    { text: "D. 70%", correct: false },
+                    { text: "E. There is no minimum pass mark, it's graded on a curve.", correct: false }
+                ],
+                explanation: "Page 4 mentions: 'A total of 100 marks are available for this module assessment, and you are required to achieve minimum 50% to pass this module.'"
+            },
+            {
+                question: "5. Which Learning Outcome (LO) specifically addresses the task of constructing a programming solution to solve a defined business problem?",
+                options: [
+                    { text: "A. LO1: Critically evaluate principles of programming.", correct: false },
+                    { text: "B. LO2: Critically evaluate the use of code libraries.", correct: false },
+                    { text: "C. LO3: Construct a programming solution to solve a defined business problem.", correct: true },
+                    { text: "D. All LOs equally address this task.", correct: false },
+                    { text: "E. LO1 and LO2 combined.", correct: false }
+                ],
+                explanation: "Page 5 lists the LOs, and LO3 is: 'Construct a programming solution to solve a defined business problem.' This is directly mapped to Task 2 on Page 13."
+            },
+            {
+                question: "6. What is the primary business problem KRONIK Financial Services (KFS) is facing according to the scenario?",
+                options: [
+                    { text: "A. Decreasing loan applications due to poor online presence.", correct: false },
+                    { text: "B. Inability to secure funding for small business loans.", correct: false },
+                    { text: "C. High staff turnover in the loan approval team.", correct: false },
+                    { text: "D. Manual loan application process struggling with increased volume, leading to delays and risks.", correct: true },
+                    { text: "E. Competition from larger financial institutions offering lower interest rates.", correct: false }
+                ],
+                explanation: "Page 5 describes KFS's situation: 'loan applications increased by over 200%... current loan application process remains manual... resulted in skills shortages, longer loan approval times and increased potential operational and control risk. The current operating model constrains further growth.'"
+            },
+            {
+                question: "7. What are the two data files provided by the DBA for KFS?",
+                options: [
+                    { text: "A. 'KRONIK_Applications.csv' and 'KRONIK_Decisions.xlsx'", correct: false },
+                    { text: "B. 'KRONIK_Loans_Database_Table.pdf' and 'KRONIK Loans Data.xlsx'", correct: true },
+                    { text: "C. 'Customer_Info.txt' and 'Loan_History.sql'", correct: false },
+                    { text: "D. 'KFS_Leads.pdf' and 'Sales_Data.csv'", correct: false },
+                    { text: "E. 'Financial_Records.xml' and 'Previous_Loans.json'", correct: false }
+                ],
+                explanation: "Page 6 explicitly lists the two files: 'A file in PDF format called ‘KRONIK_Loans_Database_Table.pdf’' and 'An Excel file, called 'KRONIK Loans Data.xlsx''."
+            },
+            {
+                question: "8. According to the 'Report Structure and Referencing' section (Page 12), which of these is NOT counted towards the 2,500-word limit for the Business Report?",
+                options: [
+                    { text: "A. Introduction", correct: false },
+                    { text: "B. Approach", correct: false },
+                    { text: "C. Recommendations", correct: false },
+                    { text: "D. Conclusions", correct: false },
+                    { text: "E. Appendices (Optional) and References", correct: true }
+                ],
+                explanation: "Page 12 states: 'Total word count: 2,500. The Cover Page, Table of Contents, References, Appendices (Optional), Tables, Charts and Figures do not count towards word count.' The sections in bold (Introduction, Approach, Recommendations, Conclusions) do count."
+            },
+            {
+                question: "9. A Critical Success Factor (CSF) for the 'Approach' section of your Business Report is a well-justified design. What should your discussion on design include, as per Page 8?",
+                options: [
+                    { text: "A. Detailed financial projections for the design implementation.", correct: false },
+                    { text: "B. Using pseudo code to aid understanding and ensure the design is code agnostic.", correct: true },
+                    { text: "C. A commitment to using only proprietary KFS software.", correct: false },
+                    { text: "D. A comparison of at least five different programming languages.", correct: false },
+                    { text: "E. A signed approval from the KFS board for the chosen design.", correct: false }
+                ],
+                explanation: "Page 8, under 'Your Approach discussions should include:', lists 'The design (e.g., using pseudo code) to aid understanding and allow the design to be implemented in other languages if needed (code agnostic);'."
+            },
+            {
+                question: "10. When making recommendations for future work (e.g., a predictive model), what is NOT explicitly required to be implemented or built, according to Page 8?",
+                options: [
+                    { text: "A. A short explanation of the techniques.", correct: false },
+                    { text: "B. Mention of libraries and tools.", correct: false },
+                    { text: "C. Objective functions to evaluate precision.", correct: false },
+                    { text: "D. Implementing the recommendation ideas in code or building the predictive model.", correct: true },
+                    { text: "E. Discussing how data collection could be improved.", correct: false }
+                ],
+                explanation: "Page 8 states: 'Note: There is no need to implement your recommendation ideas in code or build a predictive model'. This is a KPI for this section - focus on explanation, not actual coding of the predictive model."
+            },
+            {
+                question: "11. What is the required deliverable format for Task 2, the Programming Solution?",
+                options: [
+                    { text: "A. A Word document containing only Python script text.", correct: false },
+                    { text: "B. A series of screenshots of the code running in an IDE.", correct: false },
+                    { text: "C. A pre-run Jupyter notebook (.ipynb file) using Google Colab.", correct: true },
+                    { text: "D. A compiled executable file of the Python program.", correct: false },
+                    { text: "E. A flowchart and a separate Python script file (.py).", correct: false }
+                ],
+                explanation: "Page 10 states: 'You must deliver a pre-run Jupyter notebook also known as an Interactive Python Notebook (a .ipynb file) using Google Colab, with the code used, with comments...'. This is a CSF for Task 2 submission."
+            },
+            {
+                question: "12. Which of the following is a MANDATORY item for the Exploratory Data Analysis (EDA) in your Python notebook, as per Pages 10-11?",
+                options: [
+                    { text: "A. The income distribution of all main applicants.", correct: false },
+                    { text: "B. The total amount loaned by KFS.", correct: true },
+                    { text: "C. The top ten applicants by loan amount.", correct: false },
+                    { text: "D. A sentiment analysis of customer feedback.", correct: false },
+                    { text: "E. The distribution of properties (rural, urban etc.) of all loan applicants.", correct: false }
+                ],
+                explanation: "Page 10 lists mandatory EDA: 'The total amount loaned by KFS.' and 'The average amount loaned.' Page 11 lists more mandatory items. Income distribution and property distribution are optional. A KPI for the EDA is completing all mandatory items."
+            },
+            {
+                question: "13. When presenting monetary values (e.g., loan amounts) in your EDA, what specific instruction is given regarding currency presentation?",
+                options: [
+                    { text: "A. Use US dollars ($) as it's an international standard.", correct: false },
+                    { text: "B. Present all values in thousands (e.g., 50 for £50,000).", correct: false },
+                    { text: "C. Ensure currency is appropriately presented (use £ for UK currency).", correct: true },
+                    { text: "D. No specific currency symbol is required, just numerical values.", correct: false },
+                    { text: "E. Convert all amounts to Euros (€) for consistency.", correct: false }
+                ],
+                explanation: "Page 11, under the optional EDA items, has a note: 'Note: Ensure currency is appropriately presented (use £ for UK currency)'."
+            },
+            {
+                question: "14. How must you ensure your Python notebook (the .ipynb file) is accessible for marking alongside your Word document report?",
+                options: [
+                    { text: "A. Only paste screenshots of the code into the Word document.", correct: false },
+                    { text: "B. Email the .ipynb file separately to the marker.", correct: false },
+                    { text: "C. Upload the .ipynb file to a personal cloud drive and hope the marker can find it.", correct: false },
+                    { text: "D. Embed the pre-run notebook into the Word document OR provide a shared link to it (e.g., from Google Colab).", correct: true },
+                    { text: "E. Print the entire notebook and submit it as a hard copy.", correct: false }
+                ],
+                explanation: "Page 11 states: 'Also, this pre-run code file (Python Jupyter notebook) should ideally be embedded or a link to it presented in your report.' Page 13 reinforces this: 'embed your Pre-run Python notebook into your Word document. If you are unable... you must provide a shared link...' This is a CSF for submission and a specific instruction is given: 'You must include an accessible link to your code to pass this module.'"
+            },
+            {
+                question: "15. How many marks are specifically awarded for the overall professionalism of your report and adoption of academic standards?",
+                options: [
+                    { text: "A. 0 marks, it's expected.", correct: false },
+                    { text: "B. 5 marks.", correct: false },
+                    { text: "C. 10 marks.", correct: true },
+                    { text: "D. 15 marks.", correct: false },
+                    { text: "E. 20 marks.", correct: false }
+                ],
+                explanation: "Page 12 begins Section 3 with: 'In addition, ten marks are awarded for the overall professionalism of your report and the adoption of academic standards.'"
+            },
+            {
+                question: "16. One aspect the Introduction of your Business Report must comment on (Page 8) is 'any regulatory and ethical implications'. A CSF for this would be:",
+                options: [
+                    { text: "A. Ignoring them as KFS is a small company.", correct: false },
+                    { text: "B. Briefly acknowledging their existence without detailed discussion.", correct: false },
+                    { text: "C. A thorough consideration of potential regulatory (e.g., data privacy) and ethical (e.g., algorithmic bias) issues related to the proposed data solution.", correct: true },
+                    { text: "D. Stating that all KFS operations are fully compliant by default.", correct: false },
+                    { text: "E. Focusing only on the financial regulations applicable to loan provisions.", correct: false }
+                ],
+                explanation: "Page 8 lists 'regulatory and ethical implications' as a required comment for the introduction. A CSF is to address this thoughtfully, considering aspects like data privacy (GDPR, etc.) and potential biases in automated decision-making, which are key in data analytics projects."
+            },
+            {
+                question: "17. Which of the following represents a Key Performance Indicator (KPI) for the successful completion of Task 1 (Business Report)?",
+                options: [
+                    { text: "A. The report uses a font size of 12pt.", correct: false },
+                    { text: "B. All required sections (Introduction, Approach, Recommendations, Conclusions) are present and comprehensively address the prompts.", correct: true },
+                    { text: "C. The student found the scenario interesting.", correct: false },
+                    { text: "D. The report is submitted one day before the deadline.", correct: false },
+                    { text: "E. The report includes at least 10 academic references.", correct: false }
+                ],
+                explanation: "A key KPI for the business report is its completeness and how well it addresses all aspects of the assignment brief for each required section (as outlined on pages 7-9 and 12). While number of references is important, the comprehensive addressing of prompts is more directly a KPI for task completion."
+            },
+            {
+                question: "18. A Critical Success Factor (CSF) for Task 2 (Programming Solution) is ensuring the Python code is maintainable. How can this be achieved according to the guidance?",
+                options: [
+                    { text: "A. By writing the shortest possible code, regardless of clarity.", correct: false },
+                    { text: "B. By using obscure variable names to protect intellectual property.", correct: false },
+                    { text: "C. By commenting the code using the built-in markup facility in Colab or embedded commentary, and considering version control.", correct: true },
+                    { text: "D. By ensuring the code only runs on the student's personal computer.", correct: false },
+                    { text: "E. By avoiding the use of any external Python libraries.", correct: false }
+                ],
+                explanation: "Page 8 mentions 'Maintenance of any code to allow controlled and efficient development (e.g., by version control using Git and good commentary)'. Page 10/11 mentions commenting the code and notebook for maintainability and training colleagues. This is a CSF for the long-term viability of the solution at KFS."
+            },
+            {
+                question: "19. According to the data interpretation guidelines on Page 10, how is 'Gender' represented in the datasets to be processed?",
+                options: [
+                    { text: "A. 0-Male, 1-Female", correct: false },
+                    { text: "B. M-Male, F-Female", correct: false },
+                    { text: "C. 1-Male, 2-Female", correct: true },
+                    { text: "D. Male-Male, Female-Female (as strings)", correct: false },
+                    { text: "E. The gender field is not specified for interpretation.", correct: false }
+                ],
+                explanation: "Page 10, under the Python code presentation section, lists interpretations: 'Gender: 1-Male, 2-Female'."
+            },
+            {
+                question: "20. The Business Report guidance (Page 8) suggests discussing version control (e.g., Git) as part of code maintenance. Why is this important for KFS's project?",
+                options: [
+                    { text: "A. It automatically fixes bugs in the code.", correct: false },
+                    { text: "B. It is a requirement for all BPP submissions.", correct: false },
+                    { text: "C. It allows for controlled and efficient development, especially when a team is involved and the code needs to be further developed and maintained.", correct: true },
+                    { text: "D. It's primarily for individual programmers to back up their work.", correct: false },
+                    { text: "E. It reduces the need for code comments.", correct: false }
+                ],
+                explanation: "Page 8 explicitly states 'Maintenance of any code to allow controlled and efficient development (e.g., by version control using Git and good commentary)'. The scenario (Page 6) mentions leading a 'team of programmers' and that 'code produced will be further developed and maintained'. Version control is crucial for team collaboration, tracking changes, and managing different versions of the software, which are key aspects of maintainability and scalability for KFS."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = []; // To store user's selected option index for review
+
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const feedbackEl = document.getElementById('feedback-area');
+        const nextBtn = document.getElementById('next-btn');
+        const scoreAreaEl = document.getElementById('score-area');
+        const questionAreaEl = document.getElementById('question-area');
+        const scoreDisplayEl = document.getElementById('score');
+        const retakeBtn = document.getElementById('retake-btn');
+        const reviewBtn = document.getElementById('review-btn');
+        
+        const reviewAreaEl = document.getElementById('review-area');
+        const reviewQuestionEl = document.getElementById('review-question');
+        const reviewOptionsEl = document.getElementById('review-options');
+        const reviewFeedbackEl = document.getElementById('review-feedback-area');
+        const reviewBackwardBtn = document.getElementById('review-backward-btn');
+        const reviewForwardBtn = document.getElementById('review-forward-btn');
+        const finishReviewBtn = document.getElementById('finish-review-btn');
+        let reviewQuestionIndex = 0;
+
+
+        function loadQuestion() {
+            feedbackEl.innerHTML = '';
+            nextBtn.disabled = true;
+            const currentQuestion = questions[currentQuestionIndex];
+            questionEl.textContent = currentQuestion.question;
+            optionsEl.innerHTML = '';
+            currentQuestion.options.forEach((option, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="option-label">${String.fromCharCode(65 + index)}.</span> ${option.text}`;
+                li.dataset.index = index;
+                li.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(li);
+            });
+        }
+
+        function selectAnswer(e) {
+            const selectedOptionLi = e.target.closest('li');
+            if (!selectedOptionLi || !optionsEl.contains(selectedOptionLi)) return; // Ensure click is on li or its child
+
+            const selectedIndex = parseInt(selectedOptionLi.dataset.index);
+            userAnswers[currentQuestionIndex] = selectedIndex; // Store user's choice
+
+            // Disable further clicks on options
+            Array.from(optionsEl.children).forEach(li => {
+                li.removeEventListener('click', selectAnswer);
+                li.style.cursor = 'default';
+                 if (parseInt(li.dataset.index) === selectedIndex) {
+                    li.classList.add('selected');
+                }
+            });
+
+            const currentQuestion = questions[currentQuestionIndex];
+            const correctOptionIndex = currentQuestion.options.findIndex(opt => opt.correct);
+
+            if (selectedIndex === correctOptionIndex) {
+                score++;
+                selectedOptionLi.classList.add('correct');
+                feedbackEl.innerHTML = `<p class="correct-feedback"><strong>Correct!</strong><br>${currentQuestion.explanation}</p>`;
+                feedbackEl.style.color = 'green';
+            } else {
+                selectedOptionLi.classList.add('incorrect');
+                optionsEl.children[correctOptionIndex].classList.add('correct'); // Highlight correct answer
+                feedbackEl.innerHTML = `<p class="incorrect-feedback"><strong>Incorrect.</strong> The correct answer was ${String.fromCharCode(65 + correctOptionIndex)}.<br>${currentQuestion.explanation}</p>`;
+                feedbackEl.style.color = 'red';
+            }
+            nextBtn.disabled = false;
+        }
+
+        function showScore() {
+            questionAreaEl.style.display = 'none';
+            scoreAreaEl.style.display = 'block';
+            reviewAreaEl.style.display = 'none';
+            scoreDisplayEl.textContent = `Your score: ${score} out of ${questions.length}`;
+        }
+
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showScore();
+            }
+        });
+
+        retakeBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            scoreAreaEl.style.display = 'none';
+            reviewAreaEl.style.display = 'none';
+            questionAreaEl.style.display = 'block';
+            loadQuestion();
+        });
+        
+        reviewBtn.addEventListener('click', () => {
+            scoreAreaEl.style.display = 'none';
+            reviewAreaEl.style.display = 'block';
+            reviewQuestionIndex = 0;
+            loadReviewQuestion();
+        });
+
+        function loadReviewQuestion() {
+            const questionData = questions[reviewQuestionIndex];
+            reviewQuestionEl.textContent = `Question ${reviewQuestionIndex + 1}: ${questionData.question}`;
+            reviewOptionsEl.innerHTML = '';
+            const userAnswerIndex = userAnswers[reviewQuestionIndex];
+            const correctOptionIndex = questionData.options.findIndex(opt => opt.correct);
+
+            questionData.options.forEach((option, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="option-label">${String.fromCharCode(65 + index)}.</span> ${option.text}`;
+                li.style.cursor = 'default'; // Not clickable in review
+
+                if (option.correct) {
+                    li.classList.add('correct');
+                }
+                if (index === userAnswerIndex && !option.correct) {
+                    li.classList.add('incorrect');
+                } else if (index === userAnswerIndex && option.correct) {
+                    // Already handled by .correct, but ensure no conflict if logic changes
+                }
+                reviewOptionsEl.appendChild(li);
+            });
+            
+            reviewFeedbackEl.innerHTML = `<p class="${userAnswerIndex === correctOptionIndex ? 'correct-feedback' : 'incorrect-feedback'}"><strong>Explanation:</strong><br>${questionData.explanation}</p>`;
+
+            reviewBackwardBtn.disabled = reviewQuestionIndex === 0;
+            reviewForwardBtn.disabled = reviewQuestionIndex === questions.length - 1;
+        }
+
+        reviewBackwardBtn.addEventListener('click', () => {
+            if (reviewQuestionIndex > 0) {
+                reviewQuestionIndex--;
+                loadReviewQuestion();
+            }
+        });
+
+        reviewForwardBtn.addEventListener('click', () => {
+            if (reviewQuestionIndex < questions.length - 1) {
+                reviewQuestionIndex++;
+                loadReviewQuestion();
+            }
+        });
+
+        finishReviewBtn.addEventListener('click', () => {
+            reviewAreaEl.style.display = 'none';
+            showScore(); // Go back to score display
+        });
+
+
+        // Initial load
+        loadQuestion();
+    </script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDA1 Recap Quiz</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+            background-color: #f4f7f9;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+        #quiz-container, #results-container, #review-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 650px;
+            margin-bottom: 20px;
+        }
+        .question-container, #review-question-display {
+            margin-bottom: 20px;
+        }
+        /* Control visibility via 'active' class */
+        #quiz-container:not(.active),
+        #results-container:not(.active),
+        #review-container:not(.active) {
+             display: none;
+        }
+         #quiz-container.active,
+         #results-container.active,
+         #review-container.active {
+              display: block;
+         }
+
+         /* Hide individual questions unless they are active */
+        .question-container:not(.active) {
+            display: none;
+        }
+        .question-container.active {
+            display: block;
+        }
+
+        .question-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .options-container .option {
+            display: block;
+            width: calc(100% - 24px); /* Full width minus padding */
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            text-align: left;
+            background-color: #f9f9f9;
+            font-size: 1em;
+        }
+        .options-container .option:hover:not(.disabled) {
+            background-color: #e9e9e9;
+        }
+        .options-container .option.correct {
+            background-color: #d4edda !important; /* Light green */
+            border-color: #c3e6cb !important;
+            color: #155724 !important; /* Dark green */
+            font-weight: bold;
+        }
+        .options-container .option.incorrect {
+            background-color: #f8d7da !important; /* Light red */
+            border-color: #f5c6cb !important;
+            color: #721c24 !important; /* Dark red */
+            font-weight: bold;
+        }
+        .options-container .option.user-selected {
+             border-width: 2px;
+             border-color: #888; /* Indicate user's choice in review */
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.95em;
+            display: none; /* Hidden initially */
+            border-left: 5px solid transparent;
+        }
+        .explanation.correct {
+            background-color: #e2f0e5;
+            color: #155724;
+            border-left-color: #28a745;
+            display: block;
+        }
+        .explanation.incorrect {
+             background-color: #fdedee;
+             color: #721c24;
+             border-left-color: #dc3545;
+             display: block;
+        }
+        #navigation-buttons, #review-navigation {
+            margin-top: 25px;
+            display: flex; /* Use flexbox for alignment */
+            justify-content: flex-end; /* Align buttons to the right */
+            align-items: center; /* Vertically center items */
+        }
+         #review-navigation {
+             justify-content: space-between; /* Space out review buttons */
+         }
+        #next-btn, #retake-btn, #review-prev-btn, #review-next-btn {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-left: 10px; /* Spacing between buttons */
+        }
+        #review-prev-btn, #review-next-btn {
+            font-size: 1.5em; /* Make arrows bigger */
+            padding: 5px 15px;
+        }
+        #next-btn:hover, #retake-btn:hover, #review-prev-btn:hover, #review-next-btn:hover {
+            background-color: #0056b3;
+        }
+         #next-btn {
+             display: none; /* Hidden initially */
+         }
+        #results-container {
+            text-align: center;
+            padding: 20px;
+            /* Initially hidden via class */
+        }
+        #results-container h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        #score {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 25px;
+        }
+        .option-prefix {
+            font-weight: bold;
+            margin-right: 8px;
+            display: inline-block;
+            width: 15px;
+        }
+        /* Prevent selection after answer */
+        .options-container.disabled .option {
+            cursor: default;
+            pointer-events: none; /* Disable further clicks */
+             opacity: 0.9;
+        }
+         .options-container.disabled .option:hover {
+             /* No hover effect when disabled, except for feedback colors */
+             background-color: #f9f9f9;
+         }
+        .options-container.disabled .option.correct,
+        .options-container.disabled .option.incorrect {
+            opacity: 1; /* Keep feedback visible */
+        }
+         .options-container.disabled .option.correct:hover {
+             background-color: #d4edda !important;
+         }
+         .options-container.disabled .option.incorrect:hover {
+             background-color: #f8d7da !important;
+         }
+
+        /* Review Specific Styles */
+        #review-status {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        /* Hidden template */
+        #question-template {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Main Quiz Container -->
+    <div id="quiz-container" class="active"> <!-- Start active -->
+        <h1>PDA1 Recap Quiz</h1>
+        <div id="question-area">
+             <!-- Active question will be appended here -->
+        </div>
+        <div id="navigation-buttons">
+             <button id="next-btn" onclick="nextQuestion()">Next Question</button>
+        </div>
+    </div>
+
+    <!-- Results Container -->
+     <div id="results-container" class="inactive"> <!-- Start inactive -->
+         <h2>Quiz Complete!</h2>
+         <p id="score">Your score: 0 / 10</p>
+         <button id="retake-btn" onclick="retakeQuiz()">Retake Quiz?</button>
+     </div>
+
+    <!-- Review Section Container -->
+    <div id="review-container" class="inactive"> <!-- Start inactive -->
+        <h2>Review Answers</h2>
+        <div id="review-status">Question 1 / 10</div>
+        <div id="review-question-display">
+             <p class="question-text">Review Question Text</p>
+             <div class="options-container disabled">
+                 <!-- Review options will be added here -->
+             </div>
+             <div class="explanation">Review Explanation</div>
+        </div>
+        <div id="review-navigation">
+            <button id="review-prev-btn" onclick="reviewQuestion('prev')">&larr;</button>
+            <button id="review-next-btn" onclick="reviewQuestion('next')">&rarr;</button>
+        </div>
+    </div>
+
+    <!-- Hidden Template for Questions -->
+    <div id="question-template">
+        <div class="question-container"> <!-- Base structure, no active class here -->
+            <p class="question-text">Question Text Placeholder</p>
+            <div class="options-container">
+                <!-- Options will be added here -->
+            </div>
+            <div class="explanation">Explanation Placeholder</div>
+        </div>
+    </div>
+
+
+    <script>
+        const questions = [
+            {
+                question: "According to the provided information, what is a primary use of Jupyter Notebooks or Google Colab?",
+                options: [
+                    "Primarily for creating standalone executable applications.",
+                    "To record experiments with code, including rationale, live code, equations, and visualizations.",
+                    "As a text editor for writing operating system kernels.",
+                    "For designing complex database schemas.",
+                    "To directly manipulate hardware components."
+                ],
+                correctAnswer: 1,
+                explanation: "Jupyter Notebooks/Google Colab are described as tools to create and share documents containing live code, equations, visualizations, and narrative text, suitable for recording experiments.",
+                userSelection: null
+            },
+            {
+                question: "What is the main function of a compiler in the context of programming languages?",
+                options: [
+                    "To automatically fix logical errors in the code.",
+                    "To execute the program line by line in real-time.",
+                    "To convert a programming language, like Python, into machine code.",
+                    "To provide a graphical user interface for writing code.",
+                    "To manage project dependencies and libraries."
+                ],
+                correctAnswer: 2,
+                explanation: "A compiler is described as a program that knows how to convert a given programming language into actual machine code (binary processor instructions).",
+                userSelection: null
+            },
+            {
+                question: "Which of the following is highlighted as a key design philosophy of the Python programming language?",
+                options: [
+                    "Maximum execution speed above all else.",
+                    "Suitability for low-level system programming.",
+                    "Code readability and cleanliness.",
+                    "A complex syntax to allow for powerful expressions.",
+                    "Being a strictly compiled language."
+                ],
+                correctAnswer: 2,
+                explanation: "Python's design philosophy is stated to emphasize code readability and cleanliness.",
+                userSelection: null
+            },
+            {
+                question: "How can you execute the code within a cell in a Jupyter Notebook environment?",
+                options: [
+                    "By typing \"execute\" at the end of the cell.",
+                    "By saving the Notebook file.",
+                    "By pressing the \"Run\" button or using a shortcut like Alt+Enter.",
+                    "By right-clicking the cell and selecting \"Compile\".",
+                    "Code executes automatically as you type."
+                ],
+                correctAnswer: 2,
+                explanation: "It's mentioned that to run code, one can press the \"Run\" button or use Alt+Enter to execute the code inside cells.",
+                userSelection: null
+            },
+            {
+                question: "What is a Python variable fundamentally?",
+                options: [
+                    "A function that performs a specific task.",
+                    "A reserved memory location to store values.",
+                    "A type of loop structure for iteration.",
+                    "A comment in the code ignored by the interpreter.",
+                    "A visual component in a user interface."
+                ],
+                correctAnswer: 1,
+                explanation: "A Python variable is defined as a reserved memory location to store values, giving data to the computer for processing.",
+                userSelection: null
+            },
+            {
+                question: "What are the two basic types of numbers that Python supports, as mentioned in the text?",
+                options: [
+                    "Binary and Hexadecimal.",
+                    "Fractions and Decimals.",
+                    "Integers and Floating point numbers.",
+                    "Rational and Irrational numbers.",
+                    "Positive and Negative numbers."
+                ],
+                correctAnswer: 2,
+                explanation: "The text states that Python supports two types of numbers: \"integers\" and \"floating point\" numbers.",
+                userSelection: null
+            },
+            {
+                question: "How do you add comments to Python code that will be ignored by the interpreter?",
+                options: [
+                    "Enclose the comment in `/* ... */`.",
+                    "Start the comment line with `//`.",
+                    "Type the comment after a `#` symbol.",
+                    "Enclose the comment in `<!-- ... -->`.",
+                    "Use the `COMMENT:` keyword."
+                ],
+                correctAnswer: 2,
+                explanation: "It's noted that \"#\" can be used to add comments, and everything typed after the \"#\" is ignored by the Python interpreter.",
+                userSelection: null
+            },
+            {
+                question: "When trying to concatenate a string with a number using the `+` operator in Python, what is the purpose of the `str()` function?",
+                options: [
+                    "To convert the string to a number for arithmetic addition.",
+                    "To format the string to a specific length.",
+                    "To convert the number variable to a string so it can be joined with another string.",
+                    "To check if the variable is a string type.",
+                    "To extract a substring from the number."
+                ],
+                correctAnswer: 2,
+                explanation: "The `str()` function is used to convert a non-string variable (like a float) to a string before joining it with another string using the \"+\" operator.",
+                userSelection: null
+            },
+            {
+                question: "The acronym PEMDAS is mentioned in relation to Python's handling of mathematical expressions. What does it refer to?",
+                options: [
+                    "Python's External Module Development And Sourcing.",
+                    "The order of operations (Parenthesis, Exponents, Multiplication, Division, Addition, Subtraction).",
+                    "A specific Python library for data analysis.",
+                    "The process for debugging Python code.",
+                    "Python's syntax for defining functions."
+                ],
+                correctAnswer: 1,
+                explanation: "Python respects the PEMDAS order of operations, which stands for Parenthesis, Exponents, Multiplication, Division, Addition, and Subtraction.",
+                userSelection: null
+            },
+            {
+                question: "In an expression like `perimiter = 2 * (length + breadth)`, why are parentheses used around `(length + breadth)`?",
+                options: [
+                    "To indicate that `length` and `breadth` are functions.",
+                    "To convert the sum to a string.",
+                    "To force the addition of `length` and `breadth` to be performed before the multiplication by 2.",
+                    "To create a tuple containing `length` and `breadth`.",
+                    "Parentheses are optional and only improve readability here."
+                ],
+                correctAnswer: 2,
+                explanation: "Parentheses are used to control the order of operations, ensuring that `(length + breadth)` is calculated first, before the result is multiplied by 2, following PEMDAS rules.",
+                userSelection: null
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let reviewIndex = 0;
+        const totalQuestions = questions.length; // Set total questions based on array length
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function displayQuestion(index) {
+             const questionArea = document.getElementById('question-area');
+             questionArea.innerHTML = ''; // Clear previous question if any
+             if (index >= totalQuestions) return; 
+
+             const questionData = questions[index];
+
+             const questionTemplate = document.getElementById('question-template').firstElementChild;
+             const questionContainer = questionTemplate.cloneNode(true);
+             questionContainer.id = `question-${index}`;
+             questionContainer.classList.add('active'); 
+
+             questionContainer.querySelector('.question-text').textContent = `${index + 1}. ${questionData.question}`;
+             const optionsContainer = questionContainer.querySelector('.options-container');
+             optionsContainer.innerHTML = ''; 
+
+             const optionLabels = ['A', 'B', 'C', 'D', 'E'];
+             let shuffledOptions = questionData.options.map((option, originalIndex) => ({ text: option, originalIndex: originalIndex }));
+             shuffleArray(shuffledOptions);
+             questionData.shuffledMap = shuffledOptions.map(opt => opt.originalIndex);
+
+             shuffledOptions.forEach((optionData, i) => {
+                const button = document.createElement('button');
+                button.className = 'option';
+                button.onclick = () => checkAnswer(optionData.originalIndex, index);
+                button.innerHTML = `<span class="option-prefix">${optionLabels[i]}</span> ${optionData.text}`;
+                optionsContainer.appendChild(button);
+             });
+
+             questionContainer.querySelector('.explanation').style.display = 'none';
+             questionArea.appendChild(questionContainer); 
+             document.getElementById('next-btn').style.display = 'none';
+        }
+
+        function checkAnswer(selectedOriginalIndex, questionIndex) {
+            const questionData = questions[questionIndex];
+            questionData.userSelection = selectedOriginalIndex;
+            const isCorrect = selectedOriginalIndex === questionData.correctAnswer;
+
+            const questionContainer = document.getElementById(`question-${questionIndex}`);
+            const optionsContainer = questionContainer.querySelector('.options-container');
+            optionsContainer.classList.add('disabled');
+
+            const optionButtons = optionsContainer.querySelectorAll('.option');
+            const shuffledMap = questionData.shuffledMap;
+
+            const selectedButtonIndex = shuffledMap.findIndex(origIdx => origIdx === selectedOriginalIndex);
+            const correctButtonIndex = shuffledMap.findIndex(origIdx => origIdx === questionData.correctAnswer);
+
+            if (isCorrect) {
+                score++;
+                optionButtons[selectedButtonIndex].classList.add('correct');
+                questionContainer.querySelector('.explanation').textContent = "Correct! " + questionData.explanation;
+                questionContainer.querySelector('.explanation').className = 'explanation correct';
+            } else {
+                optionButtons[selectedButtonIndex].classList.add('incorrect');
+                if (correctButtonIndex !== -1) { 
+                   optionButtons[correctButtonIndex].classList.add('correct');
+                }
+                questionContainer.querySelector('.explanation').textContent = "Incorrect. " + questionData.explanation;
+                questionContainer.querySelector('.explanation').className = 'explanation incorrect';
+            }
+
+            const nextButton = document.getElementById('next-btn');
+            nextButton.style.display = 'inline-block';
+            if (currentQuestionIndex < totalQuestions - 1) {
+                nextButton.textContent = 'Next Question';
+            } else {
+                nextButton.textContent = 'Show Results';
+            }
+        }
+
+        function nextQuestion() {
+             currentQuestionIndex++;
+             if (currentQuestionIndex < totalQuestions) {
+                displayQuestion(currentQuestionIndex);
+             } else {
+                 showResults();
+             }
+        }
+
+        function showResults() {
+             document.getElementById('quiz-container').classList.remove('active');
+             document.getElementById('quiz-container').classList.add('inactive');
+             const resultsContainer = document.getElementById('results-container');
+             document.getElementById('score').textContent = `Your score: ${score} / ${totalQuestions}`;
+             resultsContainer.classList.remove('inactive');
+             resultsContainer.classList.add('active'); 
+
+             const reviewContainer = document.getElementById('review-container');
+             reviewContainer.classList.remove('inactive');
+             reviewContainer.classList.add('active');
+             reviewIndex = 0;
+             displayReview(reviewIndex);
+        }
+
+        function displayReview(index) {
+            if (index < 0 || index >= totalQuestions) return; 
+
+            const questionData = questions[index];
+            const reviewDisplay = document.getElementById('review-question-display');
+            reviewDisplay.querySelector('.question-text').textContent = `${index + 1}. ${questionData.question}`;
+
+            const optionsContainer = reviewDisplay.querySelector('.options-container');
+            optionsContainer.innerHTML = ''; 
+
+            const optionLabels = ['A', 'B', 'C', 'D', 'E'];
+            questionData.options.forEach((optionText, i) => {
+                const button = document.createElement('button');
+                button.className = 'option disabled'; 
+                button.innerHTML = `<span class="option-prefix">${optionLabels[i]}</span> ${optionText}`;
+
+                if (i === questionData.correctAnswer) {
+                    button.classList.add('correct');
+                }
+                if (questionData.userSelection !== null && i === questionData.userSelection) {
+                    button.classList.add('user-selected');
+                    if (i !== questionData.correctAnswer) {
+                        button.classList.add('incorrect');
+                    }
+                }
+                optionsContainer.appendChild(button);
+            });
+
+            const explanationDiv = reviewDisplay.querySelector('.explanation');
+            explanationDiv.textContent = questionData.explanation;
+            if (questionData.userSelection !== null && questionData.userSelection === questionData.correctAnswer) {
+                explanationDiv.className = 'explanation correct';
+            } else {
+                 explanationDiv.className = 'explanation incorrect';
+            }
+             explanationDiv.style.display = 'block'; 
+
+            document.getElementById('review-status').textContent = `Question ${index + 1} / ${totalQuestions}`;
+            document.getElementById('review-prev-btn').disabled = (index === 0);
+            document.getElementById('review-next-btn').disabled = (index === totalQuestions - 1);
+        }
+
+        function reviewQuestion(direction) {
+            if (direction === 'prev' && reviewIndex > 0) {
+                reviewIndex--;
+            } else if (direction === 'next' && reviewIndex < totalQuestions - 1) {
+                reviewIndex++;
+            }
+            displayReview(reviewIndex);
+        }
+
+        function retakeQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            reviewIndex = 0;
+            questions.forEach(q => {
+                q.userSelection = null; 
+                delete q.shuffledMap; 
+            });
+
+            document.getElementById('results-container').classList.remove('active');
+            document.getElementById('results-container').classList.add('inactive');
+            document.getElementById('review-container').classList.remove('active');
+            document.getElementById('review-container').classList.add('inactive');
+
+            const quizContainer = document.getElementById('quiz-container');
+            quizContainer.classList.remove('inactive');
+            quizContainer.classList.add('active'); 
+
+            displayQuestion(0); 
+        }
+
+        window.onload = () => {
+            // `totalQuestions` is already set. Update score and review status displays.
+            document.getElementById('score').textContent = `Your score: 0 / ${totalQuestions}`;
+            document.getElementById('review-status').textContent = `Question 1 / ${totalQuestions}`;
+            displayQuestion(0); 
+        };
+
+    </script>
+
+</body>
+</html>
